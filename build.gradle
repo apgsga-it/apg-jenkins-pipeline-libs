@@ -9,7 +9,6 @@ repositories {
 	}
 }
 
-
 sourceSets {
   main {
     groovy {
@@ -18,6 +17,9 @@ sourceSets {
   }
 }
 
+jar{
+	from sourceSets.main.allSource
+}
 
 dependencies {
    	compile group: 'org.codehaus.groovy' , name: 'groovy-all', version: '2.4.9'
@@ -30,8 +32,8 @@ publishing {
 	publications {
 		maven(MavenPublication) {
 			groupId = 'com.apgsga.jenkins'
-			artifactId = 'jenkins-patch-lib'
-			version = '0.1'
+			artifactId = 'apg-jenkins-pipeline-libs'
+			version = '0.1-SNAPSHOT'
 			from components.java
 		}
 	}
