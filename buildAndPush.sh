@@ -72,6 +72,7 @@ if [ -z "$COMMITMSG" ]; then
   show_help >&2
   exit 1
 fi
+git diff
 echo "Running with Commit Msg=$COMMITMSG and Branch=$BRANCH, ok?"
 read ackn
 test="$(tr [A-Z] [a-z] <<< "$ackn")"
@@ -79,6 +80,7 @@ if [ "$test" != "y" ] ; then
   echo  "Ok, doing nothing and terminating."
   exit 0
 fi
-./gradlew clean build publishToMavenLocal --info --stacktrace 
+./gradlew clean build publishToMavenLocal --info --stacktrace
+git add -A
 git commit -m "$COMMITMSG"
 git push origin "$BRANCH"

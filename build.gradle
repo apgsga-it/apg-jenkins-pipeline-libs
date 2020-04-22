@@ -12,12 +12,17 @@ repositories {
 sourceSets {
   main {
     groovy {
-      srcDirs = ['src/main/jenkins/server', 'vars']
+      srcDirs = ['vars']
     }
   }
 }
 
 jar{
+	from sourceSets.main.allSource
+}
+
+task sourceJar(type: Jar, dependsOn: classes) {
+	classifier 'sources'
 	from sourceSets.main.allSource
 }
 
@@ -35,6 +40,7 @@ publishing {
 			artifactId = 'apg-jenkins-pipeline-libs'
 			version = '0.1-SNAPSHOT'
 			from components.java
+			artifact tasks.sourceJar
 		}
 	}
 }
