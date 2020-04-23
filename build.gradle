@@ -2,7 +2,7 @@ apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
 // In this section you declare where to find the dependencies of your project
-
+//
 repositories {
 	maven {
 		url = "https://repo.jenkins-ci.org/public"
