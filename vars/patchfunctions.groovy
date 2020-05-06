@@ -167,6 +167,7 @@ def failIf(parm) {
 	}
 }
 
+// TODO (che, jhe) 5.5.20: This does'nt make sense, mavenLocal should not be Node bound
 def mavenLocalRepo(patchConfig) {
 	node {
 		dir('mavenLocalRepo') {
