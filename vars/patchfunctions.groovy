@@ -226,6 +226,9 @@ def approveInstallation(patchConfig) {
 	userInput = input (id:"Patch${patchConfig.patchNummer}InstallFor${patchConfig.currentTarget}Ok" , message:"Ok for ${patchConfig.currentTarget} Installation?" , submitter: 'svcjenkinsclient')
 }
 
+def patchBuildsServices(patchConfig) {
+
+}
 
 def patchBuildsConcurrent(patchConfig) {
 	node {
@@ -239,6 +242,8 @@ def patchBuildsConcurrent(patchConfig) {
 		}
 	}
 }
+
+
 
 def nextRevision(patchConfig) {
 	setPatchRevision(patchConfig)
