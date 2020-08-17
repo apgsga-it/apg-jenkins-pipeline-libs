@@ -121,4 +121,16 @@ class TargetSystemMappingGroovyImplTest extends Specification {
             stateMap.get("ProduktionInstallationsbereit").get("stage").equals("BuildFor")
             stateMap.get("ProduktionInstallationsbereit").get("target").equals("test-CHPI211")
     }
+
+    def "test findStatus"() {
+        expect:
+            tsmObject.findStatus("Entwicklung") == 0
+            tsmObject.findStatus("EntwicklungInstallationsbereit") == 2
+            tsmObject.findStatus("Informatiktest") == 20
+            tsmObject.findStatus("InformatiktestInstallationsbereit") == 15
+            tsmObject.findStatus("Anwendertest") == 30
+            tsmObject.findStatus("AnwendertestInstallationsbereit") == 25
+            tsmObject.findStatus("Produktion") == 80
+            tsmObject.findStatus("ProduktionInstallationsbereit") == 65
+    }
 }

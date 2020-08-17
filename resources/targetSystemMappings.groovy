@@ -20,7 +20,15 @@ class  TargetSystemMappings {
     }
 
     def findStatus(String toStatus) {
-        //TODO JHE, not sure what we want here
+        def statusMap = [:]
+        def targetSystemMappingAsJson = new JsonSlurper().parseText(tsmFile.text)
+        targetSystemMappingAsJson.stageMappings.find({ a ->
+            a.stages.find({
+                def m = [:]
+                statusMap.put((String)"${a.name}${it.toState}",(String)"${it.code}")
+            })
+        })
+        return Integer.valueOf(statusMap."${toStatus}")
     }
 
     def serviceTypeFor(String serviceName, String target) {
