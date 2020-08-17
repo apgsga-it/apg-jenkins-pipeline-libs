@@ -51,6 +51,11 @@ class  TargetSystemMappings {
         vts
     }
 
+    def listInstallTargets() {
+        def targetSystemMappingAsJson = new JsonSlurper().parseText(tsmFile.text)
+        return targetSystemMappingAsJson.onDemandTarget
+    }
+
     private def loadStageMapping(targetSystemMappingAsText) {
         def stageMapping = [:]
         def targetSystemMappingAsJson = new JsonSlurper().parseText(targetSystemMappingAsText)

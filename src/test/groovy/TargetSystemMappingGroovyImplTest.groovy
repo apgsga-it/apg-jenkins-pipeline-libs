@@ -53,4 +53,15 @@ class TargetSystemMappingGroovyImplTest extends Specification {
             vts.contains("AnwendertestInstallationsbereit")
             vts.contains("ProduktionInstallationsbereit")
     }
+
+    def "test listInstallTargets"() {
+        when:
+            def lit = tsmObject.listInstallTargets()
+        then:
+            lit.size() == 4
+            lit.contains("test-CHEI211")
+            lit.contains("test-CHEI212")
+            lit.contains("test-CHTI212")
+            lit.contains("test-devjhe")
+    }
 }
