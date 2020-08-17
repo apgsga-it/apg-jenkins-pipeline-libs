@@ -59,6 +59,22 @@ class  TargetSystemMappings {
         odt
     }
 
+    def stateMap() {
+        def stateMap = [:]
+        def targetSystemMappingAsJson = new JsonSlurper().parseText(tsmFile.text)
+        targetSystemMappingAsJson.stageMappings.find({ a ->
+            a.stages.find({
+                def m = [:]
+                m.put("targetName",(String)"${a.name}")
+                m.put("clsName",(String)"${it.implcls}")
+                m.put("stage",(String)"${it.name}")
+                m.put("target",(String)"${a.target}")
+                stateMap.put((String)"${a.name}${it.toState}",m)
+            })
+        })
+        stateMap
+    }
+
     private def loadStageMapping(targetSystemMappingAsText) {
         def stageMapping = [:]
         def targetSystemMappingAsJson = new JsonSlurper().parseText(targetSystemMappingAsText)
