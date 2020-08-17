@@ -12,7 +12,7 @@ def static create(def tsmFilePath) {
 }
 
 @Singleton()
-class TargetSystemMappings {
+class  TargetSystemMappings {
 
     private File tsmFile
     def setTsmFile(def tsmFile){
@@ -37,6 +37,27 @@ class TargetSystemMappings {
         def targetInstances = loadTargetInstances(tsmFile.text)
         // JHE (12.08.2020): For now, we check if "light" is in host name of the DB service
         return targetInstances."${target}".find{service -> service.name.equalsIgnoreCase("it21-db")}.host.contains("light")
+    }
+
+    def validToStates() {
+        def vts = []
+        def stageMapping = loadStageMapping(tsmFile.text)
+        stageMapping.keySet().each { stage ->
+            stageMapping.get(stage).each { toStage ->
+                // Ensure we store String, and not GString
+                vts.add((String)"${stage}${toStage.toState}")
+            }
+        }
+        vts
+    }
+
+    private def loadStageMapping(targetSystemMappingAsText) {
+        def stageMapping = [:]
+        def targetSystemMappingAsJson = new JsonSlurper().parseText(targetSystemMappingAsText)
+        targetSystemMappingAsJson.stageMappings.each( {stage ->
+            stageMapping.put(stage.name,stage.stages)
+        })
+        stageMapping
     }
 
     private def loadTargetInstances(targetSystemMappingAsText) {

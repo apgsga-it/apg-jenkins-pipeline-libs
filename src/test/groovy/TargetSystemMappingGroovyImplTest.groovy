@@ -30,12 +30,27 @@ class TargetSystemMappingGroovyImplTest extends Specification {
             guiServiceType == "test-service-chei211.apgsga.ch"
     }
 
-    def "isLightInstance"() {
+    def "test isLightInstance"() {
         when:
             def lightInstance = tsmObject.isLightInstance("test-dev-jhe")
             def nonLightInstance = tsmObject.isLightInstance("test-CHEI212")
         then:
             lightInstance == true
             nonLightInstance == false
+    }
+
+    def "test validToStates"() {
+        when:
+            def vts = tsmObject.validToStates()
+        then:
+            vts.size() == 8
+            vts.contains("Entwicklung")
+            vts.contains("Informatiktest")
+            vts.contains("Anwendertest")
+            vts.contains("Produktion")
+            vts.contains("EntwicklungInstallationsbereit")
+            vts.contains("InformatiktestInstallationsbereit")
+            vts.contains("AnwendertestInstallationsbereit")
+            vts.contains("ProduktionInstallationsbereit")
     }
 }
