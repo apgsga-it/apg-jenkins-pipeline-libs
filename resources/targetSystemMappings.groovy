@@ -53,7 +53,10 @@ class  TargetSystemMappings {
 
     def listInstallTargets() {
         def targetSystemMappingAsJson = new JsonSlurper().parseText(tsmFile.text)
-        return targetSystemMappingAsJson.onDemandTarget
+        def odt = []
+        // Ensure we return a list of String, and not GString
+        targetSystemMappingAsJson.onDemandTarget.each{target -> odt.add((String)target)}
+        odt
     }
 
     private def loadStageMapping(targetSystemMappingAsText) {
