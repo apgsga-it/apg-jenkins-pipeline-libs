@@ -23,8 +23,8 @@ def patchBuildsConcurrent(patchConfig) {
                 // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
                 coFromBranchCvs(service.microServiceBranch,service.packagerName)
 
-                /*
-                nextRevision(patchConfig)
+                nextRevision(service)
+                */
                 generateVersionProperties(patchConfig)
                 buildAndReleaseModulesConcurrent(patchConfig)
                 saveRevisions(patchConfig)
@@ -32,6 +32,26 @@ def patchBuildsConcurrent(patchConfig) {
             }
        )}
     }
+}
+
+def nextRevision(service) {
+    setPatchRevision(service)
+    //setPatchLastRevision(patchConfig)
+}
+
+def setPatchRevision(service) {
+
+    dir(service.packagerName) {
+        def cmd = "./gradlew clean"
+    }
+
+    /*
+    def cmd = "/opt/apg-patch-cli/bin/apsrevcli.sh -nr"
+    def revision = sh ( returnStdout : true, script: cmd).trim()
+    patchConfig.revision = revision
+    log("patchConfig.revision has been set with ${revision}","setPatchRevision")
+
+     */
 }
 
 def coFromBranchCvs(cvsBranch, moduleName) {
