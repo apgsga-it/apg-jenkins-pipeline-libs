@@ -17,35 +17,31 @@ def dummyTestToBeRemovedCoFromBranchCvs(patchConfig) {
 def patchBuildsConcurrent(patchConfig) {
     node {
         deleteDir()
-        lock("${patchConfig.serviceName}${patchConfig.currentTarget}Build") {
-            coPackagerProjectsFromBranchCvs(patchConfig)
+        patchConfig.services.each {
+            lock("${it.serviceName}${patchConfig.currentTarget}Build") {
+                // JHE (05.10.2020) : by convention, the corresponding packager name is : <service-name>-pkg
+                //def servicePackagerName = "${it.serviceName}-pkg"
+                // TODO JHE (05.10.2020): remove hardcoded value
+                def servicePackagerName = "testapp-pkg"
+                coFromBranchCvs(it.microServiceBranch,servicePackagerName)
 
-            /*
-            nextRevision(patchConfig)
-            generateVersionProperties(patchConfig)
-            buildAndReleaseModulesConcurrent(patchConfig)
-            saveRevisions(patchConfig)
+                    /*
+                nextRevision(patchConfig)
+                generateVersionProperties(patchConfig)
+                buildAndReleaseModulesConcurrent(patchConfig)
+                saveRevisions(patchConfig)
 
-             */
+                 */
+            }
         }
     }
 }
 
-def coPackagerProjectsFromBranchCvs(patchConfig) {
-    patchConfig.services.each {
-        // JHE (05.10.2020) : by convention, the corresponding packager name is : <service-name>-pkg
-        //def servicePackagerName = "${it.serviceName}-pkg"
-        // TODO JHE (05.10.2020): remove hardcoded value
-        def servicePackagerName = "testapp-pkg"
-        coFromBranchCvs(patchConfig,it.microServiceBranch,servicePackagerName)
-    }
-}
-
-def coFromBranchCvs(patchConfig, cvsBranch, moduleName) {
+def coFromBranchCvs(cvsBranch, moduleName) {
     def callBack = benchmark()
     def duration = callBack {
         checkout scm: ([$class: 'CVSSCM', canUseUpdate: true, checkoutCurrentTimestamp: false, cleanOnFailedUpdate: false, disableCvsQuiet: false, forceCleanCopy: true, legacy: false, pruneEmptyDirectories: false, repositories: [
-                [compressionLevel: -1, cvsRoot: patchConfig.cvsroot, excludedRegions: [[pattern: '']], passwordRequired: false, repositoryItems: [
+                [compressionLevel: -1, cvsRoot: env.CVS_ROOT, excludedRegions: [[pattern: '']], passwordRequired: false, repositoryItems: [
                         [location: [$class: 'BranchRepositoryLocation', branchName: cvsBranch, useHeadIfNotFound: false],  modules: [
                                 [localName: moduleName, remoteName: moduleName]
                         ]]
