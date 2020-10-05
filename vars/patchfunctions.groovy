@@ -16,25 +16,18 @@ def dummyTestToBeRemovedCoFromBranchCvs(patchConfig) {
 
 def patchBuildsConcurrent(patchConfig) {
     node {
-        deleteDir()
+
         patchConfig.services.each { service -> (
             lock("${service.serviceName}-${patchConfig.currentTarget}-Build") {
-                // JHE (05.10.2020) : by convention, the corresponding packager name is : <service-name>-pkg
-                //def servicePackagerName = "${it.serviceName}-pkg"
-                // TODO JHE (05.10.2020): remove hardcoded value
-
-                service.mavenArtifacts.each { ma -> (
-                    coFromBranchCvs(service.microServiceBranch, ma.name)
-                )}
-
-
+                deleteDir()
+                // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
+                coFromBranchCvs(service.microServiceBranch,service.packagerName)
 
                 /*
                 nextRevision(patchConfig)
                 generateVersionProperties(patchConfig)
                 buildAndReleaseModulesConcurrent(patchConfig)
                 saveRevisions(patchConfig)
-
                  */
             }
        )}
