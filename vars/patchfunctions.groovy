@@ -42,7 +42,7 @@ def nextRevision(service) {
 def setPatchRevision(service) {
 
     dir(service.packagerName) {
-        def cmd = "./gradlew clean publish -PnewRevision -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH --stacktrace --info"
+        def cmd = "./gradlew clean publish -PnewRevision -PupdateArtifact=com.apgsga.testapp:testapp-module:testjheVersion -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH --stacktrace --info"
         def result = sh ( returnStdout : true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
     }
