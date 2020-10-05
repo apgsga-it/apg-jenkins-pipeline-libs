@@ -18,11 +18,11 @@ def patchBuildsConcurrent(patchConfig) {
     node {
         deleteDir()
         patchConfig.services.each {
-            lock("${it.serviceName}${patchConfig.currentTarget}Build") {
+            lock("${it.serviceName}-${patchConfig.currentTarget}-Build") {
                 // JHE (05.10.2020) : by convention, the corresponding packager name is : <service-name>-pkg
                 //def servicePackagerName = "${it.serviceName}-pkg"
                 // TODO JHE (05.10.2020): remove hardcoded value
-                def servicePackagerName = "testapp-pkg"
+                def servicePackagerName = "apg-gradle-plugins-testmodules"
                 coFromBranchCvs(it.microServiceBranch,servicePackagerName)
 
                     /*
