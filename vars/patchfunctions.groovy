@@ -1,3 +1,5 @@
+import com.apgsga.revision.manager.domain.RevisionManagerBuilder
+
 def dummyTestToBeRemovedCoFromBranchCvs(patchConfig) {
     patchConfig.services.each {
         println("Service = ${it.serviceName}")
@@ -24,6 +26,11 @@ def patchBuildsConcurrent(patchConfig) {
                 coFromBranchCvs(service.microServiceBranch,service.packagerName)
 
                 nextRevision(service)
+                def lastRevision = RevisionManagerBuilder.create().build().lastRevision(service.serviceName,"dev-jhe")
+                println "lastRevision for ${service.serviceName} on dev-jhe = ${lastRevision}"
+
+                // service.revisionNumber = lastRevision
+
                 /*
                 generateVersionProperties(patchConfig)
                 buildAndReleaseModulesConcurrent(patchConfig)
@@ -41,10 +48,25 @@ def nextRevision(service) {
 
 def setPatchRevision(service) {
 
+    def cmd
+
     dir(service.packagerName) {
-        def cmd = "./gradlew clean publish -PnewRevision -PupdateArtifact=com.apgsga.testapp:testapp-module:testjheVersion,com.apgsga.testapp:testapp-service:testjheVersion -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH --stacktrace --info"
+        cmd = "./gradlew clean publish -PnewRevision -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH -Dgradle.user.home=/var/jenkins/gradle/home --stacktrace --info"
         def result = sh ( returnStdout : true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
+
+
+
+
+
+        // TODO JHE (05.10.2020) : will be useful when releasing modules, probably too early here
+        /*
+        service.mavenArtifacts.each {
+            cmd = "./gradlew clean publish -PupdateArtifact=com.apgsga.testapp:testapp-module:testjheVersioniuiu -PinstallTarget=dev-jhe -PbuildType=PATCH -Dgradle.user.home=/var/jenkins/gradle/home --info"
+        }
+
+         */
+
     }
 
     /*
