@@ -1,4 +1,4 @@
-def coAndTagAllModulesFor(patchConfig) {
+def coFromBranchCvs(patchConfig) {
     patchConfig.services.each {
         println("Service = ${it.serviceName}")
         println("CVS Branch = ${it.microServiceBranch}")
