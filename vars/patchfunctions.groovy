@@ -1,3 +1,4 @@
+@Grab('com.apgsga.gradle:revision-manager:2.12-SNAPSHOT')
 import com.apgsga.revision.manager.domain.RevisionManagerBuilder
 
 def dummyTestToBeRemovedCoFromBranchCvs(patchConfig) {
@@ -54,10 +55,6 @@ def setPatchRevision(service) {
         cmd = "./gradlew clean publish -PnewRevision -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH -Dgradle.user.home=/var/jenkins/gradle/home --stacktrace --info"
         def result = sh ( returnStdout : true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
-
-
-
-
 
         // TODO JHE (05.10.2020) : will be useful when releasing modules, probably too early here
         /*
