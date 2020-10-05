@@ -43,6 +43,8 @@ def setPatchRevision(service) {
 
     dir(service.packagerName) {
         def cmd = "./gradlew clean"
+        def result = sh ( returnStdout : true, script: cmd).trim()
+        println "result of ${cmd} : ${result}"
     }
 
     /*
