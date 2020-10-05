@@ -9,7 +9,7 @@ def coFromBranchCvs(patchConfig) {
     }
 
     println("List of DB Modules:")
-    patchConfig.dbObjects.each{ db -> (
-            println("   ModuleName = ${db.moduleName}")
-    )}
+    patchConfig.dbObjects.each{
+            println("   ModuleName = ${it.moduleName}")
+    }
 }
