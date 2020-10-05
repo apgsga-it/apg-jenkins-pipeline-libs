@@ -6,9 +6,10 @@ def coFromBranchCvs(patchConfig) {
         it.mavenArtifacts.each {
             println("   Artifact name = ${it.name}")
         }
-        println("List of DB Modules:")
-        it.dbObjects.each{ db -> (
-            println("   ModuleName = ${db.moduleName}")
-        )}
     }
+
+    println("List of DB Modules:")
+    patchConfig.dbObjects.each{ db -> (
+            println("   ModuleName = ${db.moduleName}")
+    )}
 }
