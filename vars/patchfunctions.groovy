@@ -22,7 +22,7 @@ def patchBuildsConcurrent(patchConfig) {
                 // JHE (05.10.2020) : by convention, the corresponding packager name is : <service-name>-pkg
                 //def servicePackagerName = "${it.serviceName}-pkg"
                 // TODO JHE (05.10.2020): remove hardcoded value
-                def servicePackagerName = "apg-gradle-plugins-testmodules"
+                def servicePackagerName = "apg-gradle-plugins-testsmodules"
                 coFromBranchCvs(it.microServiceBranch,servicePackagerName)
 
                     /*
