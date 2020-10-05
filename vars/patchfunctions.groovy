@@ -7,8 +7,8 @@ def coFromBranchCvs(patchConfig) {
             println("   Artifact name = ${it.name}")
         }
         println("List of DB Modules:")
-        it.dbObjects.each{
-            println("   ModuleName = ${it.moduleName}")
-        }
+        it.dbObjects.each{ db -> (
+            println("   ModuleName = ${db.moduleName}")
+        )}
     }
 }
