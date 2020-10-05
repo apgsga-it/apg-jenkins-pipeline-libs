@@ -24,7 +24,7 @@ def patchBuildsConcurrent(patchConfig) {
                 coFromBranchCvs(service.microServiceBranch,service.packagerName)
 
                 nextRevision(service)
-                */
+                /*
                 generateVersionProperties(patchConfig)
                 buildAndReleaseModulesConcurrent(patchConfig)
                 saveRevisions(patchConfig)
