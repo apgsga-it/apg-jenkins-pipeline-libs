@@ -27,6 +27,10 @@ def patchBuildsConcurrent(patchConfig) {
 
                 File f = new File("/var/jenkins/gradle/home/Revisions.json")
                 println "Does the file now exist : ${f.exists()}"
+                println "Content of the file : ${f.text}"
+
+
+
                 println "initrevision = ${initrevision}"
                 println "initmavenVersionNumber = ${initmavenVersionNumber}"
                 def newrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
