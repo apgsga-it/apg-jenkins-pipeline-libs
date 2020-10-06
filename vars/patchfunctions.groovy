@@ -87,9 +87,9 @@ def releaseModule(module,revision,revisionMnemoPart) {
 }
 
 // TODO (che, 29.10) not very efficient
-def coFromTagCvsConcurrent(tag,module) {
+def coFromTagCvsConcurrent(tag,moduleName,revision,revisionMnemoPart) {
     lock ("ConcurrentCvsCheckout") {
-        coFromTagcvs(tag, module)
+        coFromTagcvs(tag, moduleName)
     }
 }
 
