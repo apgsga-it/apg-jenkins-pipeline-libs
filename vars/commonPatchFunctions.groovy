@@ -19,6 +19,7 @@ def getRevisionFor(service,target) {
     def json = readPatchJsonFile(jsonFile)
     if(json.services."${service.serviceName}" == null || json.services."${service.serviceName}"."${target}") {
         println "Current Revision for ${service.serviceName} on ${target} = SNAPSHOT"
+        return "SNAPSHOT"
     }
     def revision = json.services."${service.serviceName}"."${target}"
     println "Current Revision for ${service.serviceName} on ${target} = ${revision}"
