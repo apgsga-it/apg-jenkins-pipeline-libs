@@ -19,6 +19,9 @@ def patchBuildsConcurrent(patchConfig) {
                 // TODO JHE (05.10.2020): to be checked, do we still need this step ??
                 // generateVersionProperties(patchConfig)
 
+
+                revision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
+                mavenVersionNumber = mavenVersionNumber(service,revision)
                 buildAndReleaseModulesConcurrent(service,tag,revision,mavenVersionNumber)
 
                 /*
@@ -84,7 +87,7 @@ def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
 }
 
 def mavenVersionNumber(service,revision) {
-    def mavenVersion = revision?.trim() ? service.baseVersionNumber + "." + service.revisionMnemoPart + "-" + revision : service.baseVersionNumber + "." + service.revisionMnemoPart
+    def mavenVersion = revision?.trim() ? service.baseVersionNumber + "." + service.revisionMnemoPart + "-" + revision : service.baseVersionNumber + "." + service.revisionMnemoPart + "-SNAPSHOT"
     println "mavenVersionNumber = ${mavenVersion}"
     return mavenVersion
 }
