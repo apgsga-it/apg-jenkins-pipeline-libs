@@ -85,7 +85,8 @@ def buildAndReleaseModule(module,revision,revisionMnemoPart, mavenVersionNumber)
 def buildModule(module,buildVersion) {
     dir ("${module.name}") {
         log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
-        def mvnCommand = "mvn -DbomVersion=${buildVersion} clean deploy"
+        //TODO JHE (06.10.2020): get active profile via env properties, or activate a default within settings.xml
+        def mvnCommand = "mvn -DbomVersion=${buildVersion} -Partifactory-jhe clean deploy"
         log("${mvnCommand}","buildModule")
         lock ("BomUpdate${buildVersion}") {
             withMaven( maven: 'apache-maven-3.2.5') { sh "${mvnCommand}" }
