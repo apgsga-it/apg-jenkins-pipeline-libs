@@ -1,11 +1,11 @@
-import groovy.json.JsonSlurperClassic
+import groovy.json.JsonSlurper
 
 def printTestMessage(def param) {
     println "This is a test message ... with param = ${param}"
 }
 
 def readPatchJsonFile(def jsonFile) {
-    def json = new JsonSlurperClassic().parseText(jsonFile.text)
+    def json = new JsonSlurper().parse(jsonFile)
     json
 }
 
