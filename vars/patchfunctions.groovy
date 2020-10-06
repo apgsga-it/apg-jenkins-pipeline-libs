@@ -20,27 +20,6 @@ def patchBuildsConcurrent(patchConfig) {
                 // generateVersionProperties(patchConfig)
 
 
-
-
-/*
-                println "S T A R T ---------- D E B U G G I N G "
-
-                File f = new File("/var/jenkins/gradle/home/Revisions.json")
-                println "Does the file now exist : ${f.exists()}"
-                println "Content of the file : ${f.text}"
-
-
-
-                println "initrevision = ${initrevision}"
-                println "initmavenVersionNumber = ${initmavenVersionNumber}"
-                def newrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
-                def newmavenVersionNumber = mavenVersionNumber(service,newrevision)
-                println "new revision = ${newrevision}"
-                println "new mavenVersionNumber = ${newmavenVersionNumber}"
-                println "E N D -------------- D E B U G G I N G "
-
- */
-
                 def newrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
                 def newmavenVersionNumber = mavenVersionNumber(service,newrevision)
                 buildAndReleaseModulesConcurrent(service,tag,newrevision,newmavenVersionNumber)
@@ -93,13 +72,25 @@ def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart, m
 def buildAndReleaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
     log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
     releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber)
+    buildModule(module,mavenVersionNumber)
 
     // TODO JHE (06.10.2020) : to be uncommented and implemented
     /*
-    buildModule(patchConfig,module)
+
     updateBom(patchConfig,module)
      */
     log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
+}
+
+def buildModule(module,buildVersion) {
+    dir ("${module.name}") {
+        log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
+        def mvnCommand = "mvn -DbomVersion=${buildVersion} clean deploy"
+        log("${mvnCommand}","buildModule")
+        lock ("BomUpdate${buildVersion}") {
+            withMaven( maven: 'apache-maven-3.2.5') { sh "${mvnCommand}" }
+        }
+    }
 }
 
 def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
