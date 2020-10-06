@@ -2,18 +2,24 @@
 
 def patchBuildsConcurrent(patchConfig) {
     node {
+        // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
         patchConfig.services.each { service -> (
             lock("${service.serviceName}-${patchConfig.currentTarget}-Build") {
                 deleteDir()
+
+                def tag = tagName(patchConfig)
+                def revision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
+                def mavenVersionNumber = mavenVersionNumber(service,revision)
+
                 // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
                 coFromBranchCvs(service.microServiceBranch,service.packagerName)
 
-                publishNewRevisionFor(service)
+                publishNewRevisionFor(service,mavenVersionNumber)
 
                 // TODO JHE (05.10.2020): to be checked, do we still need this step ??
                 // generateVersionProperties(patchConfig)
 
-                buildAndReleaseModulesConcurrent(patchConfig)
+                buildAndReleaseModulesConcurrent(service,tag,revision,mavenVersionNumber)
 
                 /*
                 saveRevisions(patchConfig)
@@ -23,9 +29,7 @@ def patchBuildsConcurrent(patchConfig) {
     }
 }
 
-def buildAndReleaseModulesConcurrent(patchConfig) {
-    //TODO JHE (05.10.2020) : do we want to parallelize services as well ?
-    patchConfig.services.each { service ->
+def buildAndReleaseModulesConcurrent(service,tag,revision,mavenVersionNumber) {
         // TODO JHE (05.10.2020): Probably missing on Service API -> mavenArtifactsToBuild
         def artefacts = service.mavenArtifactsToBuild;
         def listsByDepLevel = artefacts.groupBy { it.dependencyLevel }
@@ -33,19 +37,14 @@ def buildAndReleaseModulesConcurrent(patchConfig) {
         depLevels.sort()
         depLevels.reverse(true)
         log(depLevels, "buildAndReleaseModulesConcurrent")
-        def tag = tagName(patchConfig)
-        def revisionMnemoPart = service.revisionMnemoPart
-        def revision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
-        def mavenVersionNumber = mavenVersionNumber(service,revision)
         depLevels.each { depLevel ->
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
             log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
             def parallelBuilds = artifactsToBuildParallel.collectEntries {
-                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, revision, revisionMnemoPart, mavenVersionNumber)]
+                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, revision, service.revisionMnemoPart, mavenVersionNumber)]
             }
             parallel parallelBuilds
         }
-    }
 }
 
 def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart, mavenVersionNumber) {
@@ -117,9 +116,9 @@ def tagName(patchConfig) {
     }
 }
 
-def publishNewRevisionFor(service) {
+def publishNewRevisionFor(service,mavenVersionNumber) {
     dir(service.packagerName) {
-        def cmd = "./gradlew clean publish -PnewRevision -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH -Dgradle.user.home=/var/jenkins/gradle/home --stacktrace --info"
+        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${mavenVersionNumber} -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH -Dgradle.user.home=/var/jenkins/gradle/home --stacktrace --info"
         def result = sh ( returnStdout : true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
     }
