@@ -40,14 +40,14 @@ def buildAndReleaseModulesConcurrent(patchConfig) {
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
             log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
             def parallelBuilds = artifactsToBuildParallel.collectEntries {
-                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it,revision,revisionMnemoPart)]
+                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, revision, revisionMnemoPart)]
             }
             parallel parallelBuilds
         }
     }
 }
 
-def buildAndReleaseModulesConcurrent(tag,module) {
+def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart) {
     return {
         node {
 
