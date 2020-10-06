@@ -11,6 +11,10 @@ def readPatchJsonFile(def jsonFile) {
 
 // TODO JHE (06.10.2020): This might/could be centralized somewhere else
 def getRevisionFor(service,target) {
+
+    println "ONLY FOR DEBUG PURPOSE .... within getRevisionFor , param -> service=${service}, target=${target}"
+
+
     def jsonFilePath = "/var/jenkins/gradle/home/Revisions.json"
     def jsonFile = new File(jsonFilePath)
     if(!jsonFile.exists()) {
