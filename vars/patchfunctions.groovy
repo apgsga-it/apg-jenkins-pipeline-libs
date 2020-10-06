@@ -34,7 +34,7 @@ def buildAndReleaseModulesConcurrent(patchConfig) {
         depLevels.reverse(true)
         log(depLevels, "buildAndReleaseModulesConcurrent")
         def tag = tagName(patchConfig)
-        def revisionMnemoPart = patchConfig.revisionMnemoPart
+        def revisionMnemoPart = service.revisionMnemoPart
         def revision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
         depLevels.each { depLevel ->
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
@@ -51,7 +51,7 @@ def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart) {
     return {
         node {
 
-            coFromTagCvsConcurrent(tag,module.name,revision,revisionMnemoPart)
+            coFromTagCvsConcurrent(tag,module.name)
             // JHE (06.10.2020): Probably we can ignore this step
             //coIt21BundleFromBranchCvs(patchConfig)
 
@@ -74,7 +74,7 @@ def buildAndReleaseModule(module,revision,revisionMnemoPart) {
 
 def releaseModule(module,revision,revisionMnemoPart) {
     dir ("${module.name}") {
-        log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart,"releaseModule")
+        log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart, "releaseModule")
 
         /*
         def buildVersion =  mavenVersionNumber(patchConfig,patchConfig.revision)
@@ -87,7 +87,7 @@ def releaseModule(module,revision,revisionMnemoPart) {
 }
 
 // TODO (che, 29.10) not very efficient
-def coFromTagCvsConcurrent(tag,moduleName,revision,revisionMnemoPart) {
+def coFromTagCvsConcurrent(tag,moduleName) {
     lock ("ConcurrentCvsCheckout") {
         coFromTagcvs(tag, moduleName)
     }
