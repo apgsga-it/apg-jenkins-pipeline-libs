@@ -12,7 +12,7 @@ def readPatchJsonFile(def jsonFile) {
 // TODO JHE (06.10.2020): This might/could be centralized somewhere else
 def getRevisionFor(service,target) {
     def jsonFile = new File("/var/jenkins/gradle/home/Revisions.json")
-    if(jsonFile == null) {
+    if(!jsonFile.exists()) {
         println "Current Revision for ${service.serviceName} on ${target} = SNAPSHOT"
         return "SNAPSHOT"
     }
