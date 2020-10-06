@@ -29,8 +29,10 @@ def patchBuildsConcurrent(patchConfig) {
                 println "Does the file now exist : ${f.exists()}"
                 println "initrevision = ${initrevision}"
                 println "initmavenVersionNumber = ${initmavenVersionNumber}"
-                println "new revision = ${commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)}"
-                println "new mavenVersionNumber = ${mavenVersionNumber(service,newrevision)}"
+                def newrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
+                def newmavenVersionNumber = mavenVersionNumber(service,newrevision)
+                println "new revision = ${newrevision}"
+                println "new mavenVersionNumber = ${newmavenVersionNumber}"
                 println "E N D -------------- D E B U G G I N G "
 
                 /*
