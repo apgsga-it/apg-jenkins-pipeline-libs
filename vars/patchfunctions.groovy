@@ -8,21 +8,21 @@ def patchBuildsConcurrent(patchConfig) {
                 deleteDir()
 
                 def tag = tagName(patchConfig)
-                def revision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
-                def mavenVersionNumber = mavenVersionNumber(service,revision)
+                def initrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
+                def initmavenVersionNumber = mavenVersionNumber(service,initrevision)
 
                 // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
                 coFromBranchCvs(service.microServiceBranch,service.packagerName)
 
-                publishNewRevisionFor(service,mavenVersionNumber)
+                publishNewRevisionFor(service,initmavenVersionNumber)
 
                 // TODO JHE (05.10.2020): to be checked, do we still need this step ??
                 // generateVersionProperties(patchConfig)
 
 
-                revision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
-                mavenVersionNumber = mavenVersionNumber(service,revision)
-                buildAndReleaseModulesConcurrent(service,tag,revision,mavenVersionNumber)
+                def newrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
+                def newmavenVersionNumber = mavenVersionNumber(service,newrevision)
+                buildAndReleaseModulesConcurrent(service,tag,newrevision,newmavenVersionNumber)
 
                 /*
                 saveRevisions(patchConfig)
