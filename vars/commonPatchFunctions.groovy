@@ -1,11 +1,11 @@
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 def printTestMessage(def param) {
     println "This is a test message ... with param = ${param}"
 }
 
 def readPatchJsonFile(def jsonFile) {
-    def json = new JsonSlurper().parse(jsonFile)
+    def json = new JsonSlurperClassic().parseText(jsonFile.text)
     json
 }
 
@@ -22,7 +22,8 @@ def getRevisionFor(service,target) {
         return ""
     }
     def json = readPatchJsonFile(jsonFile)
-    if(json.services."${service.serviceName}" == null || json.services."${service.serviceName}"."${target}") {
+//    if(json.services."${service.serviceName}" == null || json.services."${service.serviceName}"."${target}") {
+    if(json.services.echoservice == null || json.services.echoservice.DEV-JHE) {
         println "No revision ever published for ${service.serviceName} on ${target}, returning empty String"
         return ""
     }
