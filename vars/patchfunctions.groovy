@@ -1,3 +1,5 @@
+#!groovy
+
 def patchBuildsConcurrent(patchConfig) {
     node {
         patchConfig.services.each { service -> (
@@ -31,37 +33,57 @@ def buildAndReleaseModulesConcurrent(patchConfig) {
         depLevels.sort()
         depLevels.reverse(true)
         log(depLevels, "buildAndReleaseModulesConcurrent")
+        def tag = tagName(patchConfig)
+        def revisionMnemoPart = patchConfig.revisionMnemoPart
+        def revision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
         depLevels.each { depLevel ->
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
             log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
             def parallelBuilds = artifactsToBuildParallel.collectEntries {
-                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(patchConfig, it)]
+                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it,revision,revisionMnemoPart)]
             }
             parallel parallelBuilds
         }
     }
 }
 
-def buildAndReleaseModulesConcurrent(patchConfig,module) {
+def buildAndReleaseModulesConcurrent(tag,module) {
     return {
         node {
-            def tag = tagName(patchConfig)
-            coFromTagCvsConcurrent(tag,module.name)
+
+            coFromTagCvsConcurrent(tag,module.name,revision,revisionMnemoPart)
             // JHE (06.10.2020): Probably we can ignore this step
             //coIt21BundleFromBranchCvs(patchConfig)
 
-            // TODO JHE (06.10.2020) : uncomment and implement this one
-            // buildAndReleaseModule(patchConfig,module)
+            buildAndReleaseModule(module)
         }
     }
 }
 
-def buildAndReleaseModule(patchConfig,module) {
+def buildAndReleaseModule(module,revision,revisionMnemoPart) {
     log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
-    releaseModule(patchConfig,module)
+    releaseModule(module,revision,revisionMnemoPart)
+
+    // TODO JHE (06.10.2020) : to be uncommented and implemented
+    /*
     buildModule(patchConfig,module)
     updateBom(patchConfig,module)
+     */
     log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
+}
+
+def releaseModule(module,revision,revisionMnemoPart) {
+    dir ("${module.name}") {
+        log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart,"releaseModule")
+
+        /*
+        def buildVersion =  mavenVersionNumber(patchConfig,patchConfig.revision)
+        def mvnCommand = "mvn -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + patchConfig.revisionMnemoPart + '-' + patchConfig.revision
+        log("${mvnCommand}","releaseModule")
+        withMaven( maven: 'apache-maven-3.5.0') { sh "${mvnCommand}" }
+
+         */
+    }
 }
 
 // TODO (che, 29.10) not very efficient
