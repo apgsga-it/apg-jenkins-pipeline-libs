@@ -78,7 +78,7 @@ def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
         log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart, "releaseModule")
         def buildVersion =  mavenVersionNumber
         log("BuildVersion = ${buildVersion}","releaseModule")
-        def mvnCommand = "mvn -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + patchConfig.revisionMnemoPart + '-' + patchConfig.revision
+        def mvnCommand = "mvn -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + revisionMnemoPart + '-' + revision
         log("${mvnCommand}","releaseModule")
 
         // TODO JHE (06.10.2020) : to be uncommented and implemented
