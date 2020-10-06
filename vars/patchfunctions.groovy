@@ -22,7 +22,7 @@ def patchBuildsConcurrent(patchConfig) {
 
 
 
-
+/*
                 println "S T A R T ---------- D E B U G G I N G "
 
                 File f = new File("/var/jenkins/gradle/home/Revisions.json")
@@ -39,11 +39,11 @@ def patchBuildsConcurrent(patchConfig) {
                 println "new mavenVersionNumber = ${newmavenVersionNumber}"
                 println "E N D -------------- D E B U G G I N G "
 
-                /*
+ */
+
                 def newrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
                 def newmavenVersionNumber = mavenVersionNumber(service,newrevision)
                 buildAndReleaseModulesConcurrent(service,tag,newrevision,newmavenVersionNumber)
-                */
 
 
 
