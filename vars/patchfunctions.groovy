@@ -36,18 +36,19 @@ def buildAndReleaseModulesConcurrent(patchConfig) {
         def tag = tagName(patchConfig)
         def revisionMnemoPart = service.revisionMnemoPart
         def revision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
+        def mavenVersionNumber = mavenVersionNumber(patchConfig,revision)
         depLevels.each { depLevel ->
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
             log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
             def parallelBuilds = artifactsToBuildParallel.collectEntries {
-                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, revision, revisionMnemoPart)]
+                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, revision, revisionMnemoPart, mavenVersionNumber)]
             }
             parallel parallelBuilds
         }
     }
 }
 
-def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart) {
+def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart, mavenVersionNumber) {
     return {
         node {
 
@@ -55,14 +56,14 @@ def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart) {
             // JHE (06.10.2020): Probably we can ignore this step
             //coIt21BundleFromBranchCvs(patchConfig)
 
-            buildAndReleaseModule(module,revision, revisionMnemoPart)
+            buildAndReleaseModule(module,revision, revisionMnemoPart, mavenVersionNumber)
         }
     }
 }
 
-def buildAndReleaseModule(module,revision,revisionMnemoPart) {
+def buildAndReleaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
     log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
-    releaseModule(module,revision,revisionMnemoPart)
+    releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber)
 
     // TODO JHE (06.10.2020) : to be uncommented and implemented
     /*
@@ -72,18 +73,23 @@ def buildAndReleaseModule(module,revision,revisionMnemoPart) {
     log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
 }
 
-def releaseModule(module,revision,revisionMnemoPart) {
+def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
     dir ("${module.name}") {
         log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart, "releaseModule")
+        def buildVersion =  mavenVersionNumber
+        log("BuildVersion = ${buildVersion}","releaseModule")
 
+        // TODO JHE (06.10.2020) : to be uncommented and implemented
         /*
-        def buildVersion =  mavenVersionNumber(patchConfig,patchConfig.revision)
         def mvnCommand = "mvn -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + patchConfig.revisionMnemoPart + '-' + patchConfig.revision
         log("${mvnCommand}","releaseModule")
         withMaven( maven: 'apache-maven-3.5.0') { sh "${mvnCommand}" }
-
          */
     }
+}
+
+def mavenVersionNumber(patchConfig,revision) {
+    return patchConfig.baseVersionNumber + "." + patchConfig.revisionMnemoPart + "-" + revision
 }
 
 // TODO (che, 29.10) not very efficient
