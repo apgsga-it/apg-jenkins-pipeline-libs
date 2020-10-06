@@ -84,7 +84,9 @@ def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
 }
 
 def mavenVersionNumber(service,revision) {
-    return service.baseVersionNumber + "." + service.revisionMnemoPart + "-" + revision
+    def mavenVersion = service.baseVersionNumber + "." + service.revisionMnemoPart + "-" + revision
+    println "mavenVersionNumber = ${mavenVersion}"
+    return mavenVersion
 }
 
 // TODO (che, 29.10) not very efficient
