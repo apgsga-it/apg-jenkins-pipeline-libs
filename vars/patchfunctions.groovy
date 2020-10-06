@@ -36,7 +36,7 @@ def buildAndReleaseModulesConcurrent(patchConfig) {
         def tag = tagName(patchConfig)
         def revisionMnemoPart = service.revisionMnemoPart
         def revision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
-        def mavenVersionNumber = mavenVersionNumber(patchConfig,revision)
+        def mavenVersionNumber = mavenVersionNumber(service,revision)
         depLevels.each { depLevel ->
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
             log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
@@ -88,8 +88,8 @@ def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
     }
 }
 
-def mavenVersionNumber(patchConfig,revision) {
-    return patchConfig.baseVersionNumber + "." + patchConfig.revisionMnemoPart + "-" + revision
+def mavenVersionNumber(service,revision) {
+    return service.baseVersionNumber + "." + service.revisionMnemoPart + "-" + revision
 }
 
 // TODO (che, 29.10) not very efficient
