@@ -22,8 +22,7 @@ def getRevisionFor(service,target) {
         return ""
     }
     def json = readPatchJsonFile(jsonFile)
-//    if(json.services."${service.serviceName}" == null || json.services."${service.serviceName}"."${target}") {
-    if(json.services.echoservice == null || json.services.echoservice.DEV-JHE) {
+    if(json.services."${service.serviceName}" == null || json.services."${service.serviceName}"."${target}" == null) {
         println "No revision ever published for ${service.serviceName} on ${target}, returning empty String"
         return ""
     }
