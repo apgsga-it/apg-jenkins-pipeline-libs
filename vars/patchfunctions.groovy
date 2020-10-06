@@ -55,7 +55,7 @@ def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart) {
             // JHE (06.10.2020): Probably we can ignore this step
             //coIt21BundleFromBranchCvs(patchConfig)
 
-            buildAndReleaseModule(module)
+            buildAndReleaseModule(module,revision, revisionMnemoPart)
         }
     }
 }
