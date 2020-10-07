@@ -8,8 +8,6 @@ def patchBuildsConcurrent(patchConfig) {
                 deleteDir()
 
                 def tag = tagName(patchConfig)
-//                def initrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
-//                def initmavenVersionNumber = mavenVersionNumber(service,initrevision)
 
                 // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
                 coFromBranchCvs(service.microServiceBranch,service.packagerName)
@@ -22,14 +20,9 @@ def patchBuildsConcurrent(patchConfig) {
 
                 def newrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
                 def newmavenVersionNumber = mavenVersionNumber(service,newrevision)
-                buildAndReleaseModulesConcurrent(service,tag,newrevision,newmavenVersionNumber)
+                buildAndReleaseModulesConcurrent(service,patchConfig.currentTarget,tag)
 
-
-
-
-
-
-                // TODO JHE (06.10.2020) : Probably needed, but not 100% sure yet
+                // TODO JHE (06.10.2020) : Probably not needed, but not 100% sure yet
                 /*
                 saveRevisions(patchConfig)
                  */
@@ -38,7 +31,8 @@ def patchBuildsConcurrent(patchConfig) {
     }
 }
 
-def buildAndReleaseModulesConcurrent(service,tag,revision,mavenVersionNumber) {
+def buildAndReleaseModulesConcurrent(service,target,tag) {
+
         // TODO JHE (05.10.2020): Probably missing on Service API -> mavenArtifactsToBuild
         def artefacts = service.mavenArtifactsToBuild;
         def listsByDepLevel = artefacts.groupBy { it.dependencyLevel }
@@ -50,13 +44,13 @@ def buildAndReleaseModulesConcurrent(service,tag,revision,mavenVersionNumber) {
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
             log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
             def parallelBuilds = artifactsToBuildParallel.collectEntries {
-                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, revision, service.revisionMnemoPart, mavenVersionNumber)]
+                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, target, service)]
             }
             parallel parallelBuilds
         }
 }
 
-def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart, mavenVersionNumber) {
+def buildAndReleaseModulesConcurrent(tag, module, target, service) {
     return {
         node {
 
@@ -64,22 +58,28 @@ def buildAndReleaseModulesConcurrent(tag, module, revision, revisionMnemoPart, m
             // JHE (06.10.2020): Probably we can ignore this step
             //coIt21BundleFromBranchCvs(patchConfig)
 
-            buildAndReleaseModule(module,revision, revisionMnemoPart, mavenVersionNumber)
+            buildAndReleaseModule(module,service,target)
         }
     }
 }
 
-def buildAndReleaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
+def buildAndReleaseModule(module,service,target) {
+    def revision = commonPatchFunctions.getRevisionFor(service,target)
+    def mavenVersionNumber = mavenVersionNumber(service,revision)
     log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
-    releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber)
+    releaseModule(module,revision,service.revisionMnemoPart, mavenVersionNumber)
     buildModule(module,mavenVersionNumber)
+    updateBom(service,target,module,mavenVersionNumber)
+}
 
-    // TODO JHE (06.10.2020) : to be uncommented and implemented
-    /*
-
-    updateBom(patchConfig,module)
-     */
-    log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
+def updateBom(service,target,module,mavenVersionNumber) {
+    lock ("BomUpdate${mavenVersionNumber}") {
+        dir(service.packagerName) {
+            def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=/var/jenkins/gradle/home  --stacktrace --info"
+            def result = sh ( returnStdout : true, script: cmd).trim()
+            println "result of ${cmd} : ${result}"
+        }
+    }
 }
 
 def buildModule(module,buildVersion) {
