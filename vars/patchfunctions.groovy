@@ -6,36 +6,27 @@ def patchBuildsConcurrent(patchConfig) {
         patchConfig.services.each { service -> (
             lock("${service.serviceName}-${patchConfig.currentTarget}-Build") {
                 deleteDir()
-
-                def tag = tagName(patchConfig)
-
-                // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
-                coFromBranchCvs(service.microServiceBranch,service.packagerName)
-                dir(service.packagerName) {
-                    stash includes: "**/*", name: service.packagerName.replaceAll("/","")
-                }
-
+                checkoutAndStashPackager(service)
                 publishNewRevisionFor(service)
-
-                // TODO JHE (05.10.2020): to be checked, do we still need this step ??
-                // generateVersionProperties(patchConfig)
-
-
-                def newrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
-                def newmavenVersionNumber = mavenVersionNumber(service,newrevision)
-                buildAndReleaseModulesConcurrent(service,patchConfig.currentTarget,tag)
-
-                // TODO JHE (06.10.2020) : Probably not needed, but not 100% sure yet
-                /*
-                saveRevisions(patchConfig)
-                 */
+                buildAndReleaseModulesConcurrent(service,patchConfig.currentTarget,tagName(patchConfig))
             }
        )}
     }
 }
 
-def buildAndReleaseModulesConcurrent(service,target,tag) {
+def checkoutAndStashPackager(service) {
+    // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
+    coFromBranchCvs(service.microServiceBranch,service.packagerName)
+    dir(service.packagerName) {
+        stash includes: "**/*", name: packagerStashNameFor(service)
+    }
+}
 
+def packagerStashNameFor(service) {
+    return service.packagerName.replaceAll("/","")
+}
+
+def buildAndReleaseModulesConcurrent(service,target,tag) {
         // TODO JHE (05.10.2020): Probably missing on Service API -> mavenArtifactsToBuild
         def artefacts = service.mavenArtifactsToBuild;
         def listsByDepLevel = artefacts.groupBy { it.dependencyLevel }
@@ -56,11 +47,7 @@ def buildAndReleaseModulesConcurrent(service,target,tag) {
 def buildAndReleaseModulesConcurrent(tag, module, target, service) {
     return {
         node {
-
             coFromTagCvsConcurrent(tag,module.name)
-            // JHE (06.10.2020): Probably we can ignore this step
-            //coIt21BundleFromBranchCvs(patchConfig)
-
             buildAndReleaseModule(module,service,target)
         }
     }
@@ -75,12 +62,11 @@ def buildAndReleaseModule(module,service,target) {
     updateBom(service,target,module,mavenVersionNumber)
 }
 
+// TODO JHE (07.10.2020): to be checked here, do we want to publish the bom on Artifactory ? Or enough to have it within MavenLocal?
 def updateBom(service,target,module,mavenVersionNumber) {
-    // TODO JHE (07.10.2020) : any other way than redoing a checkout of the project ??
-    //coFromBranchCvs(service.microServiceBranch,service.packagerName)
     lock ("BomUpdate${mavenVersionNumber}") {
         dir("gradlePackagerProject") {
-            unstash service.packagerName.replaceAll("/","")
+            unstash packagerStashNameFor(service)
             def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=/var/jenkins/gradle/home  --stacktrace --info"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
@@ -147,7 +133,8 @@ def tagName(patchConfig) {
 }
 
 def publishNewRevisionFor(service) {
-    dir(service.packagerName) {
+    dir("servicePackagerProject") {
+        unstah packagerStashNameFor(service)
         def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH -Dgradle.user.home=/var/jenkins/gradle/home --stacktrace --info"
         def result = sh ( returnStdout : true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
@@ -158,7 +145,6 @@ def bomBaseVersionFor(service) {
     def bbv = service.baseVersionNumber + "." + service.revisionMnemoPart
     log("bomBaseVersion = ${bbv}, for service = ${service}", "bomBaseVersionFor")
     return bbv
-
 }
 
 def coFromBranchCvs(cvsBranch, moduleName) {
