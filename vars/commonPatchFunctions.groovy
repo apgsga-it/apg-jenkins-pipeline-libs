@@ -15,7 +15,7 @@ def readPatchJsonFileFromStash(def stashName) {
         println "E N D ----- D E B U G"
 
         unstash stashName
-        return readJsonFile(new File("PatchFile.json").text)
+        return readJsonFile(new File("./PatchFile.json").text)
     }
 }
 
