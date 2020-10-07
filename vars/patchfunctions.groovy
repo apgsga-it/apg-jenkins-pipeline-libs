@@ -12,7 +12,7 @@ def patchBuildsConcurrent(patchConfig) {
                 // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
                 coFromBranchCvs(service.microServiceBranch,service.packagerName)
                 dir(service.packagerName) {
-                    stash includes: "*", name: service.packagerName
+                    stash includes: "*", name: service.packagerName.replaceAll("/","")
                 }
 
                 publishNewRevisionFor(service)
