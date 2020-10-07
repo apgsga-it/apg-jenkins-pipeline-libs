@@ -134,7 +134,7 @@ def tagName(patchConfig) {
 
 def publishNewRevisionFor(service,patchConfig) {
     dir("servicePackagerProject") {
-        unstah packagerStashNameFor(service)
+        unstash packagerStashNameFor(service)
         def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${patchConfig.currentTarget} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchConfig.patchNummer}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
         def result = sh ( returnStdout : true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
