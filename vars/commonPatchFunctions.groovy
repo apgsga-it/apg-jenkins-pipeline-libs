@@ -15,7 +15,7 @@ def readPatchJsonFileFromStash(def stashName) {
         println "E N D ----- D E B U G"
 
         unstash stashName
-        return readJsonFile(new File("/var/lib/jenkins/jobs/Patch2222/workspace").text)
+        return readJsonFile(new File("/var/lib/jenkins/jobs/Patch2222/workspace/PatchFile.json").text)
     }
 }
 
