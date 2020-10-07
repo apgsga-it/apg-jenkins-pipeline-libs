@@ -11,6 +11,7 @@ def patchBuildsConcurrent(patchConfig) {
 
                 // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
                 coFromBranchCvs(service.microServiceBranch,service.packagerName)
+                stash includes: "${service.packagerName}/**/*", name: service.packagerName
 
                 publishNewRevisionFor(service)
 
@@ -74,9 +75,10 @@ def buildAndReleaseModule(module,service,target) {
 
 def updateBom(service,target,module,mavenVersionNumber) {
     // TODO JHE (07.10.2020) : any other way than redoing a checkout of the project ??
-    coFromBranchCvs(service.microServiceBranch,service.packagerName)
+    //coFromBranchCvs(service.microServiceBranch,service.packagerName)
     lock ("BomUpdate${mavenVersionNumber}") {
-        dir(service.packagerName) {
+        dir("gradlePackagerProject") {
+            unstash service.packagerName
             def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=/var/jenkins/gradle/home  --stacktrace --info"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
