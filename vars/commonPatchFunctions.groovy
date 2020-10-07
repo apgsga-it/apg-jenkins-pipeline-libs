@@ -1,8 +1,10 @@
 import groovy.json.JsonSlurperClassic
 
 def readPatchJsonFileFromStash(def stashName) {
-    unstash stashName
-    return readJsonFile(new File("PatchFile.json").text)
+    node {
+        unstash stashName
+        return readJsonFile(new File("PatchFile.json").text)
+    }
 }
 
 def readJsonFile(def jsonAsText) {
