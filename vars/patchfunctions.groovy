@@ -8,13 +8,13 @@ def patchBuildsConcurrent(patchConfig) {
                 deleteDir()
 
                 def tag = tagName(patchConfig)
-                def initrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
-                def initmavenVersionNumber = mavenVersionNumber(service,initrevision)
+//                def initrevision = commonPatchFunctions.getRevisionFor(service,patchConfig.currentTarget)
+//                def initmavenVersionNumber = mavenVersionNumber(service,initrevision)
 
                 // TODO JHE (05.10.2020) : service.packagerName needs to be implemented in Piper
                 coFromBranchCvs(service.microServiceBranch,service.packagerName)
 
-                publishNewRevisionFor(service,initmavenVersionNumber)
+                publishNewRevisionFor(service)
 
                 // TODO JHE (05.10.2020): to be checked, do we still need this step ??
                 // generateVersionProperties(patchConfig)
@@ -140,12 +140,19 @@ def tagName(patchConfig) {
     }
 }
 
-def publishNewRevisionFor(service,mavenVersionNumber) {
+def publishNewRevisionFor(service) {
     dir(service.packagerName) {
-        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${mavenVersionNumber} -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH -Dgradle.user.home=/var/jenkins/gradle/home --stacktrace --info"
+        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH -Dgradle.user.home=/var/jenkins/gradle/home --stacktrace --info"
         def result = sh ( returnStdout : true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
     }
+}
+
+def bomBaseVersionFor(service) {
+    def bbv = service.baseVersionNumber + "." + service.revisionMnemoPart
+    log("bomBaseVersion = ${bbv}, for service = ${service}", "bomBaseVersionFor")
+    return bbv
+
 }
 
 def coFromBranchCvs(cvsBranch, moduleName) {
