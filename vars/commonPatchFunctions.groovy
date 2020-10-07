@@ -9,6 +9,9 @@ def readPatchJsonFileFromStash(def stashName) {
         def result = sh ( returnStdout : true, script: 'pwd').trim()
         println "result : ${result}"
 
+        result = sh ( returnStdout : true, script: 'ls -la').trim()
+        println "result : ${result}"
+
         println "E N D ----- D E B U G"
 
         unstash stashName
