@@ -7,7 +7,7 @@ def patchBuildsConcurrent(patchConfig) {
             lock("${service.serviceName}-${patchConfig.currentTarget}-Build") {
                 deleteDir()
                 checkoutAndStashPackager(service)
-                publishNewRevisionFor(service)
+                publishNewRevisionFor(service,patchConfig)
                 buildAndReleaseModulesConcurrent(service,patchConfig.currentTarget,tagName(patchConfig))
             }
        )}
@@ -67,7 +67,7 @@ def updateBom(service,target,module,mavenVersionNumber) {
     lock ("BomUpdate${mavenVersionNumber}") {
         dir("gradlePackagerProject") {
             unstash packagerStashNameFor(service)
-            def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=/var/jenkins/gradle/home  --stacktrace --info"
+            def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH}  --stacktrace --info"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
@@ -132,10 +132,10 @@ def tagName(patchConfig) {
     }
 }
 
-def publishNewRevisionFor(service) {
+def publishNewRevisionFor(service,patchConfig) {
     dir("servicePackagerProject") {
         unstah packagerStashNameFor(service)
-        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PtargetHost=dev-jhe.light.apgsga.ch -PinstallTarget=dev-jhe -PpatchFilePath=/var/opt/apg-patch-service-server/db/Patch2222.json -PbuildType=PATCH -Dgradle.user.home=/var/jenkins/gradle/home --stacktrace --info"
+        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${patchConfig.currentTarget} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchConfig.patchNummer}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
         def result = sh ( returnStdout : true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
     }
