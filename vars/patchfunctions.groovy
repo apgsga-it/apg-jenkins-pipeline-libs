@@ -73,19 +73,8 @@ def buildAndReleaseModule(module,service,target) {
 }
 
 def updateBom(service,target,module,mavenVersionNumber) {
-
-    println " D E B U G "
-
-    println "Workspace = ${env.WORKSPACE}"
-    println "Worksapce for packager name = ${env.WORKSPACE}/${service.packagerName}"
-
-    println "where are we :"
-    def r = sh ( returnStdout : true, script: 'pwd').trim()
-    println r
-
-    println "E N D --- D E B U G "
-
-
+    // TODO JHE (07.10.2020) : any other way than redoing a checkout of the project ??
+    coFromBranchCvs(service.microServiceBranch,service.packagerName)
     lock ("BomUpdate${mavenVersionNumber}") {
         dir(service.packagerName) {
             def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=/var/jenkins/gradle/home  --stacktrace --info"
