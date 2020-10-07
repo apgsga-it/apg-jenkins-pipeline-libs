@@ -80,7 +80,7 @@ def updateBom(service,target,module,mavenVersionNumber) {
     //coFromBranchCvs(service.microServiceBranch,service.packagerName)
     lock ("BomUpdate${mavenVersionNumber}") {
         dir("gradlePackagerProject") {
-            unstash service.packagerName
+            unstash service.packagerName.replaceAll("/","")
             def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=/var/jenkins/gradle/home  --stacktrace --info"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
