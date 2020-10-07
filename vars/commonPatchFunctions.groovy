@@ -1,11 +1,12 @@
 import groovy.json.JsonSlurperClassic
 
-def printTestMessage(def param) {
-    println "This is a test message ... with param = ${param}"
+def readPatchJsonFileFromStash(def stashName) {
+    unstash stashName
+    return readJsonFile(new File("PatchFile.json").text)
 }
 
-def readPatchJsonFile(def jsonFile) {
-    def json = new JsonSlurperClassic().parseText(jsonFile.text)
+def readJsonFile(def jsonAsText) {
+    def json = new JsonSlurperClassic().parseText(jsonAsText)
     json
 }
 
@@ -18,7 +19,7 @@ def getRevisionFor(service,target) {
         println "${jsonFilePath} does not exist yet, returning empty String"
         return ""
     }
-    def json = readPatchJsonFile(jsonFile)
+    def json = readPatchJsonFile(jsonFile.text)
     if(json.services."${service.serviceName}" == null || json.services."${service.serviceName}"."${target}" == null) {
         println "No revision ever published for ${service.serviceName} on ${target}, returning empty String"
         return ""
