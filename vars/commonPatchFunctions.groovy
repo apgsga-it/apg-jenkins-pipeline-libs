@@ -2,6 +2,15 @@ import groovy.json.JsonSlurperClassic
 
 def readPatchJsonFileFromStash(def stashName) {
     node {
+
+        println "D E B U G"
+
+        println "stashName = ${stashName}"
+        def result = sh ( returnStdout : true, script: 'pwd').trim()
+        println "result : ${result}"
+
+        println "E N D ----- D E B U G"
+
         unstash stashName
         return readJsonFile(new File("PatchFile.json").text)
     }
