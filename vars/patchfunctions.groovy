@@ -15,9 +15,50 @@ def patchBuildsConcurrent(patchConfig) {
                 )
             }
         }, 'DB Build': {
-            println "Building DB ZIP in progress ...."
+            lock("dbBuild-${patchConfig.currentTarget}-Build") {
+                deleteDir()
+                coDbModules(patchConfig)
+            }
         }
     }
+}
+
+def coDbModules(patchConfig) {
+    def dbObjects = patchConfig.dbObjectsAsVcsPath
+    log("Following DB Objects should get checked out : ${dbObjects}","coDbModules")
+
+    def patchDbFolderName = getCoPatchDbFolderName(patchConfig)
+    fileOperations ([
+            folderDeleteOperation(folderPath: "${patchDbFolderName}")
+    ])
+    fileOperations ([
+            folderCreateOperation(folderPath: "${patchDbFolderName}")
+    ])
+    /*
+    ** work-around for not yet existing packaging of db scripts, see ticket CM-216
+    */
+    fileOperations ([
+            folderCreateOperation(folderPath: "${patchDbFolderName}/oracle")
+    ])
+
+    def patchNumber = patchConfig.patchNummer
+    def dbPatchTag = patchConfig.patchTag
+
+    log("DB Objects for patch \"${patchNumber}\" being checked out to \"${patchDbFolderName}/oracle\"","coDbModule")
+    patchConfig.dbObjects.collect{it.moduleName}.unique().each { dbModule ->
+        log("- module \"${dbModule}\" tag \"${dbPatchTag}\" being checked out","coDbModule")
+        dir("${patchDbFolderName}/oracle") {
+            def moduleDirectory = dbModule.replace(".","_")
+            sh "cvs -d${env.CVS_ROOT} co -r${dbPatchTag} -d${moduleDirectory} ${dbModule}"
+        }
+    }
+    log("DB Objects for patch \"${patchNumber}\" checked out","coDbModule")
+
+}
+
+def getCoPatchDbFolderName(patchConfig) {
+    // TODO JHE (08.10.2020): Probably we don't want to replace the "Patch" anymore, what was the purpose of it ?!?!
+    return "${patchConfig.dbPatchBranch.replace('Patch', 'test-jhe')}-${patchConfig.revisionMnemoPart}-${patchConfig.revision}"
 }
 
 def checkoutAndStashPackager(service) {
