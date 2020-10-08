@@ -23,7 +23,7 @@ def getRevisionFor(service,target) {
         println "${jsonFilePath} does not exist yet, returning empty String"
         return ""
     }
-    def json = readPatchJsonFile(jsonFile.text)
+    def json = readJsonFile(jsonFile.text)
     if(json.services."${service.serviceName}" == null || json.services."${service.serviceName}"."${target}" == null) {
         println "No revision ever published for ${service.serviceName} on ${target}, returning empty String"
         return ""
