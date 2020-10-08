@@ -4,6 +4,16 @@ def readPatchJsonFileFromStash(def stashName) {
     node {
         dir(stashName) {
             unstash stashName
+
+            println "D E B U G"
+            def cmd = "pwd"
+            def result = sh ( returnStdout : true, script: cmd).trim()
+            println "result of ${cmd} : ${result}"
+            cmd = "python -mjson.tool ${stashName}.json"
+            result = sh ( returnStdout : true, script: cmd).trim()
+            println "result of ${cmd} : ${result}"
+            println "E N D ------ D E B U G"
+
             return readJsonFile(new File("PatchFile.json").text)
         }
     }
