@@ -77,8 +77,9 @@ def updateBom(service,target,module,mavenVersionNumber) {
 def buildModule(module,buildVersion) {
     dir ("${module.name}") {
         log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
-        //TODO JHE (06.10.2020): get active profile via env properties, or activate a default within settings.xml
-        def mvnCommand = "mvn -DbomVersion=${buildVersion} -Partifactory-jhe clean deploy"
+        // TODO JHE (06.10.2020): get active profile via env properties, or activate a default within settings.xml
+        // TODO JHE (08.10.2020): to be checked if we want to install or deploy. Probably OK if it stays only on MavenLocal
+        def mvnCommand = "mvn -DbomVersion=${buildVersion} -Partifactory-jhe clean install"
         log("${mvnCommand}","buildModule")
         lock ("BomUpdate${buildVersion}") {
             withMaven( maven: 'apache-maven-3.2.5') { sh "${mvnCommand}" }
