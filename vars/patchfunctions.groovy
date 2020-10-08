@@ -2,15 +2,21 @@
 
 def patchBuildsConcurrent(patchConfig) {
     node {
-        // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
-        patchConfig.services.each { service -> (
-            lock("${service.serviceName}-${patchConfig.currentTarget}-Build") {
-                deleteDir()
-                checkoutAndStashPackager(service)
-                publishNewRevisionFor(service,patchConfig)
-                buildAndReleaseModulesConcurrent(service,patchConfig.currentTarget,tagName(patchConfig))
+        parallel 'java build': {
+            // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
+            patchConfig.services.each { service ->
+                (
+                        lock("${service.serviceName}-${patchConfig.currentTarget}-Build") {
+                            deleteDir()
+                            checkoutAndStashPackager(service)
+                            publishNewRevisionFor(service, patchConfig)
+                            buildAndReleaseModulesConcurrent(service, patchConfig.currentTarget, tagName(patchConfig))
+                        }
+                )
             }
-       )}
+        }, 'DB Build': {
+            println "Building DB ZIP in progress ...."
+        }
     }
 }
 
