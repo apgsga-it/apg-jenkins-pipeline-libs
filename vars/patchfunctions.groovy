@@ -105,7 +105,8 @@ def coDbModules(patchConfig) {
 
 def getCoPatchDbFolderName(patchConfig) {
     // TODO JHE (08.10.2020): Probably we don't want to replace the "Patch" anymore, what was the purpose of it ?!?!
-    return "${patchConfig.dbPatchBranch.replace('Patch', 'test-jhe')}-${patchConfig.revisionMnemoPart}-${patchConfig.revision}"
+    // TODO JHE (09.10.2020): That would produce a ZIP with a name like : test-jhe_0900C1_2222.zip ...... is that OK? to be checked with UGE
+    return "${patchConfig.dbPatchBranch.replace('Patch', 'test-jhe')}"
 }
 
 def checkoutAndStashPackager(service) {
