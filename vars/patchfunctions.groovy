@@ -18,14 +18,27 @@ def patchBuildsConcurrent(patchConfig) {
             lock("dbBuild-${patchConfig.currentTarget}-Build") {
                 deleteDir()
                 coDbModules(patchConfig)
-                dbAssemble(patchConfig)
-                //publishDbAssemble(patchConfig)
+                dbBuild(patchConfig)
+                publishDbZip(patchConfig)
             }
         }
     }
 }
 
-def dbAssemble(patchConfig) {
+def publishDbZip(patchConfig) {
+    def patchDbFolderName = getCoPatchDbFolderName(patchConfig)
+    def zipName = "${patchDbFolderName}.zip"
+    fileOperations ([
+            fileDeleteOperation(includes: zipName)
+    ])
+    zip zipFile: zipName, glob: "${patchDbFolderName}/**"
+    // TODO JHE (09.10.2020) : /var/jenkins/dbZips -> get it from jenkins env variable
+    fileOperations ([
+            fileCopyOperation(includes: zipName, targetLocation: "/var/jenkins/dbZips")
+    ])
+}
+
+def dbBuild(patchConfig) {
     def PatchDbFolderName = getCoPatchDbFolderName(patchConfig)
     fileOperations ([
             folderCreateOperation(folderPath: "${PatchDbFolderName}\\config")
