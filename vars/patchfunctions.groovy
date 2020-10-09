@@ -19,6 +19,7 @@ def patchBuildsConcurrent(patchConfig) {
                 deleteDir()
                 coDbModules(patchConfig)
                 dbAssemble(patchConfig)
+                //publishDbAssemble(patchConfig)
             }
         }
     }
@@ -53,7 +54,7 @@ def dbAssemble(patchConfig) {
             fileCreateOperation(fileName: "${PatchDbFolderName}\\install_patch.bat", fileContent: installPatchContent)
     ])
 
-    publishDbAssemble(patchConfig)
+
 }
 
 def coDbModules(patchConfig) {
