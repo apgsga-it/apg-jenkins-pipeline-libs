@@ -32,3 +32,14 @@ def getRevisionFor(service,target) {
     println "Current Revision for ${service.serviceName} on ${target} = ${revision}"
     return revision
 }
+
+def getTargetFor(patchConfig,stageName) {
+    def target = "unnkown"
+    def stagesMapping = patchConfig.stagesMapping
+    stagesMapping.each { stage ->
+        if(stage.name.equals(stageName)) {
+            target = stage.target
+        }
+    }
+    return target
+}
