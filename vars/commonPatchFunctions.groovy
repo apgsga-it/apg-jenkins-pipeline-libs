@@ -1,6 +1,7 @@
 #!groovy
 
 import groovy.json.JsonSlurperClassic
+import groovy.json.JsonBuilder
 
 def readPatchJsonFileFromStash(def stashName) {
     node {
@@ -42,4 +43,16 @@ def getTargetFor(patchConfig,stageName) {
         }
     }
     return target
+}
+
+def savePatchConfigState(patchConfig) {
+    node {
+        println "Saving Patchconfig State ${patchConfig.patchNummer}"
+        def patchFileName = "Patch${patchConfig.patchNummer}.json"
+        writeFile file: patchFileName , text: new JsonBuilder(patchConfig).toPrettyString()
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -sa ${patchFileName}"
+        println "Executeing ${cmd}"
+        sh "${cmd}"
+        println "Executeing ${cmd} done."
+    }
 }
