@@ -6,6 +6,7 @@ def patchBuildsConcurrent(patchConfig) {
             patchConfig.services.each { service ->
                 (
                         lock("${service.serviceName}-${patchConfig.currentTarget}-Build") {
+                            log("Building following service : ${service}","patchBuildsConcurrent")
                             deleteDir()
                             checkoutAndStashPackager(service)
                             publishNewRevisionFor(service, patchConfig)
