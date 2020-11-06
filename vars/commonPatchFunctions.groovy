@@ -45,8 +45,19 @@ def getTargetFor(patchConfig,stageName) {
     return target
 }
 
-def getStateFor(target) {
-
+def getStatusCodeFor(patchConfig,target,toStage) {
+    def state = "unkown"
+    def stageMapping = patchConfig.stagesMapping
+    stageMapping.each { sm ->
+        if(sm.name.equals(target)) {
+            sm.stages.each { stage ->
+                if(stage.name.equals(toStage)) {
+                    state = stage.code
+                }
+            }
+        }
+    }
+    return state
 }
 
 def savePatchConfigState(patchConfig) {
