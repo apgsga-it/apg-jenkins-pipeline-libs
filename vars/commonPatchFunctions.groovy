@@ -45,14 +45,30 @@ def getTargetFor(patchConfig,stageName) {
     return target
 }
 
+def getStateFor(target) {
+
+}
+
 def savePatchConfigState(patchConfig) {
     node {
         println "Saving Patchconfig State ${patchConfig.patchNummer}"
         def patchFileName = "Patch${patchConfig.patchNummer}.json"
         writeFile file: patchFileName , text: new JsonBuilder(patchConfig).toPrettyString()
-        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -sa ${patchFileName}"
+        // TODO JHE (06.11.2020) : -purl=localhost:9010 should be by default, or provided with parameter
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl=localhost:9010 -sa ${patchFileName}"
         println "Executeing ${cmd}"
         sh "${cmd}"
-        println "Executeing ${cmd} done."
+        println "DONE - ${cmd}"
+    }
+}
+
+def notifyDb(patchConfig) {
+    failIf("fail=${patchConfig.targetToState}")
+    node {
+        println "Notifying DB for ${patchConfig.patchNummer} in state ${patchConfig.targetToState}"
+        // TODO JHE (06.11.2020) : -purl=localhost:9010 should be by default, or provided with parameter
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl=localhost:9010 -sta ${patchConfig.patchNummer},${patchConfig.targetToState}"
+        sh "${cmd}"
+        println "DONE - ${cmd}"
     }
 }
