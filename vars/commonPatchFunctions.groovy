@@ -74,7 +74,6 @@ def savePatchConfigState(patchConfig) {
 }
 
 def notifyDb(patchConfig) {
-    failIf("fail=${patchConfig.targetToState}")
     node {
         println "Notifying DB for ${patchConfig.patchNummer} in state ${patchConfig.targetToState}"
         // TODO JHE (06.11.2020) : -purl=localhost:9010 should be by default, or provided with parameter
