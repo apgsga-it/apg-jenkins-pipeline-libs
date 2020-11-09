@@ -77,7 +77,7 @@ def notifyDb(patchConfig) {
     node {
         println "Notifying DB for ${patchConfig.patchNummer} in state ${patchConfig.targetToState}"
         // TODO JHE (06.11.2020) : -purl=localhost:9010 should be by default, or provided with parameter
-        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -sta ${patchConfig.patchNummer},${patchConfig.targetToState}"
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -dbsta ${patchConfig.patchNummer},${patchConfig.targetToState}"
         sh "${cmd}"
         println "DONE - ${cmd}"
     }
