@@ -1,24 +1,24 @@
 #!groovy
 
-def patchBuildsConcurrent(patchConfig) {
+def patchBuildsConcurrent(patchConfig,target) {
     node {
             // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
             patchConfig.services.each { service ->
                 (
-                        lock("${service.serviceName}-${patchConfig.currentTarget}-Build") {
+                        lock("${service.serviceName}-${target}-Build") {
                             log("Building following service : ${service}","patchBuildsConcurrent")
                             deleteDir()
                             checkoutAndStashPackager(service)
-                            publishNewRevisionFor(service, patchConfig)
-                            buildAndReleaseModulesConcurrent(service, patchConfig.currentTarget, tagName(patchConfig))
+                            publishNewRevisionFor(service, patchConfig,target)
+                            buildAndReleaseModulesConcurrent(service, target, tagName(patchConfig))
                         }
                 )
             }
     }
 }
 
-def patchBuildDbZip(patchConfig) {
-    lock("dbBuild-${patchConfig.currentTarget}-Build") {
+def patchBuildDbZip(patchConfig,target) {
+    lock("dbBuild-${target}-Build") {
         deleteDir()
         coDbModules(patchConfig)
         dbBuild(patchConfig)
@@ -229,10 +229,10 @@ def tagName(patchConfig) {
     }
 }
 
-def publishNewRevisionFor(service,patchConfig) {
+def publishNewRevisionFor(service,patchConfig,target) {
     dir("servicePackagerProject") {
         unstash packagerStashNameFor(service)
-        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${patchConfig.currentTarget} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchConfig.patchNummer}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
+        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchConfig.patchNummer}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
         def result = sh ( returnStdout : true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
     }
