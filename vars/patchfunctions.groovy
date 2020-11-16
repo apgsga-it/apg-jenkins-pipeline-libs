@@ -2,32 +2,44 @@
 
 def patchBuildsConcurrent(patchConfig,target) {
     node {
-            // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
-            patchConfig.services.each { service ->
-                (
-                        lock("${service.serviceName}-${target}-Build") {
-                            log("Building following service : ${service}","patchBuildsConcurrent")
-                            deleteDir()
-                            checkoutAndStashPackager(service)
-                            publishNewRevisionFor(service, patchConfig,target)
-                            buildAndReleaseModulesConcurrent(service, target, tagName(patchConfig))
-                        }
-                )
+            if(javaBuildRequired(patchConfig())) {
+                // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
+                patchConfig.services.each { service ->
+                    (
+                            lock("${service.serviceName}-${target}-Build") {
+                                log("Building following service : ${service}", "patchBuildsConcurrent")
+                                deleteDir()
+                                checkoutAndStashPackager(service)
+                                publishNewRevisionFor(service, patchConfig, target)
+                                buildAndReleaseModulesConcurrent(service, target, tagName(patchConfig))
+                            }
+                    )
+                }
             }
     }
 }
 
+def javaBuildRequired(patchConfig) {
+    return !patchConfig.services.isEmpty()
+}
+
 def patchBuildDbZip(patchConfig,target) {
-    lock("dbBuild-${target}-Build") {
-        deleteDir()
-        coDbModules(patchConfig)
-        dbBuild(patchConfig)
-        publishDbZip(patchConfig)
+    if(dbBuildRequired(patchConfig)) {
+        lock("dbBuild-${target}-Build") {
+            deleteDir()
+            coDbModules(patchConfig,target)
+            dbBuild(patchConfig,target)
+            publishDbZip(patchConfig,target)
+        }
     }
 }
 
-def publishDbZip(patchConfig) {
-    def patchDbFolderName = getCoPatchDbFolderName(patchConfig)
+def dbBuildRequired(patchConfig) {
+    return patchConfig.installDockerServices || !patchConfig.dbObjects.isEmpty()
+}
+
+def publishDbZip(patchConfig,target) {
+    def patchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
     def zipName = "${patchDbFolderName}.zip"
     fileOperations ([
             fileDeleteOperation(includes: zipName)
@@ -39,8 +51,8 @@ def publishDbZip(patchConfig) {
     ])
 }
 
-def dbBuild(patchConfig) {
-    def PatchDbFolderName = getCoPatchDbFolderName(patchConfig)
+def dbBuild(patchConfig,target) {
+    def PatchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
     fileOperations ([
             folderCreateOperation(folderPath: "${PatchDbFolderName}\\config")
     ])
@@ -71,11 +83,11 @@ def dbBuild(patchConfig) {
 
 }
 
-def coDbModules(patchConfig) {
+def coDbModules(patchConfig,target) {
     def dbObjects = patchConfig.dbObjectsAsVcsPath
     log("Following DB Objects should get checked out : ${dbObjects}","coDbModules")
 
-    def patchDbFolderName = getCoPatchDbFolderName(patchConfig)
+    def patchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
     fileOperations ([
             folderDeleteOperation(folderPath: "${patchDbFolderName}")
     ])
@@ -104,10 +116,8 @@ def coDbModules(patchConfig) {
 
 }
 
-def getCoPatchDbFolderName(patchConfig) {
-    // TODO JHE (08.10.2020): Probably we don't want to replace the "Patch" anymore, what was the purpose of it ?!?!
-    // TODO JHE (09.10.2020): That would produce a ZIP with a name like : test-jhe_0900C1_2222.zip ...... is that OK? to be checked with UGE
-    return "${patchConfig.dbPatchBranch.replace('Patch', 'test-jhe')}"
+def getCoPatchDbFolderName(patchConfig,target) {
+    return "${patchConfig.dbPatchBranch}_${target}"
 }
 
 def checkoutAndStashPackager(service) {
