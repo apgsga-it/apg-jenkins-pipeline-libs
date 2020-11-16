@@ -3,6 +3,7 @@
 def patchBuildsConcurrent(patchConfig,target) {
     node {
             if(javaBuildRequired(patchConfig)) {
+                commonPatchFunctions.logPatchActivity(patchConfig,"Java Build for ${target} started.")
                 // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
                 patchConfig.services.each { service ->
                     (
@@ -15,6 +16,7 @@ def patchBuildsConcurrent(patchConfig,target) {
                             }
                     )
                 }
+                commonPatchFunctions.logPatchActivity(patchConfig,"Java Build for ${target} done.")
             }
     }
 }
@@ -26,10 +28,12 @@ def javaBuildRequired(patchConfig) {
 def patchBuildDbZip(patchConfig,target) {
     if(dbBuildRequired(patchConfig)) {
         lock("dbBuild-${target}-Build") {
+            commonPatchFunctions.logPatchActivity(patchConfig,"DB Build for ${target} started.")
             deleteDir()
             coDbModules(patchConfig,target)
             dbBuild(patchConfig,target)
             publishDbZip(patchConfig,target)
+            commonPatchFunctions.logPatchActivity(patchConfig,"DB Build for ${target} done.")
         }
     }
 }
