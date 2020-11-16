@@ -85,7 +85,7 @@ def notifyDb(patchConfig,targetToState) {
 
 def logPatchActivity(def patchConfig, def logText) {
     node {
-        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -log ${patchFileName.patchNummer},${logText}"
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -log ${patchConfig.patchNummer},${logText}"
         log("Executeing ${cmd}","logPatchActivity")
         sh "${cmd}"
         log("Executeing ${cmd} done.","logPatchActivity")
