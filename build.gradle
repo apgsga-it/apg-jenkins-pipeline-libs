@@ -7,6 +7,14 @@ repositories {
 	maven {
 		url = "https://repo.jenkins-ci.org/public"
 	}
+	// TODO JHE (05.10.2020): Not sure we want/need this ...
+	maven {
+		url "${mavenRepoBaseUrl}/repo"
+		credentials {
+			username mavenRepoUser
+			password mavenRepoPwd
+		}
+	}
 }
 
 sourceSets {
