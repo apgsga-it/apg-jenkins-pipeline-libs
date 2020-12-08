@@ -188,7 +188,7 @@ def buildModule(module,buildVersion) {
         log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
         // TODO JHE (06.10.2020): get active profile via env properties, or activate a default within settings.xml
         // TODO JHE (08.10.2020): to be checked if we want to install or deploy. Probably OK if it stays only on MavenLocal
-        def mvnCommand = "mvn -DbomVersion=${buildVersion} -Partifactory-jhe clean install"
+        def mvnCommand = "mvn -DbomVersion=${buildVersion} ${env.MAVEN_PROFILE} clean install"
         log("${mvnCommand}","buildModule")
         lock ("BomUpdate${buildVersion}") {
             withMaven( maven: 'apache-maven-3.2.5') { sh "${mvnCommand}" }
@@ -201,7 +201,7 @@ def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
         log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart, "releaseModule")
         def buildVersion =  mavenVersionNumber
         log("BuildVersion = ${buildVersion}","releaseModule")
-        def mvnCommand = "mvn -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + revisionMnemoPart + '-' + revision
+        def mvnCommand = "mvn ${env.MAVEN_PROFILE} -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + revisionMnemoPart + '-' + revision
         log("${mvnCommand}","releaseModule")
         withMaven( maven: 'apache-maven-3.2.5') { sh "${mvnCommand}" }
     }
