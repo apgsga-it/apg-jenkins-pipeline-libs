@@ -83,12 +83,38 @@ def notifyDb(patchConfig,stage,successNotification,errorNotification) {
     }
 }
 
-def logPatchActivity(def patchConfig, def target, def step, def logText) {
+def logPatchActivity(def patchNumber, def target, def step, def logText) {
     node {
         // TODO JHE (06.11.2020) : -purl=localhost:9010 should be by default, or provided with parameter
-        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -log ${patchConfig.patchNummer},${target},${step},${logText}"
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -log ${patchNummer},${target},${step},${logText}"
         println "Executeing ${cmd}"
         sh "${cmd}"
         println "Executeing ${cmd} done."
     }
+}
+
+// Used in order to have Datetime info in our pipelines
+def log(msg,caller) {
+    def dt = "${new Date().format('yyyy-MM-dd HH:mm:ss.S')}"
+    def logMsg = caller != null ? "(${caller}) ${dt}: ${msg}" : "${dt}: ${msg}"
+    echo logMsg
+}
+
+// Used in order to have Datetime info in our pipelines
+def log(msg) {
+    log(msg,null)
+}
+
+def coFromBranchCvs(cvsBranch, moduleName) {
+    def callBack = benchmark()
+    def duration = callBack {
+        checkout scm: ([$class: 'CVSSCM', canUseUpdate: true, checkoutCurrentTimestamp: false, cleanOnFailedUpdate: false, disableCvsQuiet: false, forceCleanCopy: true, legacy: false, pruneEmptyDirectories: false, repositories: [
+                [compressionLevel: -1, cvsRoot: env.CVS_ROOT, excludedRegions: [[pattern: '']], passwordRequired: false, repositoryItems: [
+                        [location: [$class: 'BranchRepositoryLocation', branchName: cvsBranch, useHeadIfNotFound: false],  modules: [
+                                [localName: moduleName, remoteName: moduleName]
+                        ]]
+                ]]
+        ], skipChangeLog: false])
+    }
+    log("Checkout of ${moduleName} took ${duration} ms","coFromBranchCvs")
 }

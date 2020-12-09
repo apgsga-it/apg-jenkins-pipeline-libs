@@ -3,12 +3,12 @@
 def patchBuildsConcurrent(patchConfig,target) {
     node {
             if(javaBuildRequired(patchConfig)) {
-                commonPatchFunctions.logPatchActivity(patchConfig,target,"build","started")
+                commonPatchFunctions.logPatchActivity(patchConfig.patchNummer,target,"build","started")
                 // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
                 patchConfig.services.each { service ->
                     (
                             lock("${service.serviceName}-${target}-Build") {
-                                log("Building following service : ${service}", "patchBuildsConcurrent")
+                                commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                                 deleteDir()
                                 checkoutAndStashPackager(service)
                                 publishNewRevisionFor(service, patchConfig, target)
@@ -16,7 +16,7 @@ def patchBuildsConcurrent(patchConfig,target) {
                             }
                     )
                 }
-                commonPatchFunctions.logPatchActivity(patchConfig,target,"build","done")
+                commonPatchFunctions.logPatchActivity(patchConfig.patchNummer,target,"build","done")
             }
     }
 }
@@ -28,12 +28,12 @@ def javaBuildRequired(patchConfig) {
 def patchBuildDbZip(patchConfig,target) {
     if(dbBuildRequired(patchConfig)) {
         lock("dbBuild-${target}-Build") {
-            commonPatchFunctions.logPatchActivity(patchConfig,target,"db-build","started")
+            commonPatchFunctions.logPatchActivity(patchConfig.patchNummer,target,"db-build","started")
             deleteDir()
             coDbModules(patchConfig,target)
             dbBuild(patchConfig,target)
             publishDbZip(patchConfig,target)
-            commonPatchFunctions.logPatchActivity(patchConfig,target,"db-build","done")
+            commonPatchFunctions.logPatchActivity(patchConfig.patchNummer,target,"db-build","done")
         }
     }
 }
@@ -89,7 +89,7 @@ def dbBuild(patchConfig,target) {
 
 def coDbModules(patchConfig,target) {
     def dbObjects = patchConfig.dbObjectsAsVcsPath
-    log("Following DB Objects should get checked out : ${dbObjects}","coDbModules")
+    commonPatchFunctions.log("Following DB Objects should get checked out : ${dbObjects}","coDbModules")
 
     def patchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
     fileOperations ([
@@ -108,15 +108,15 @@ def coDbModules(patchConfig,target) {
     def patchNumber = patchConfig.patchNummer
     def dbPatchTag = patchConfig.patchTag
 
-    log("DB Objects for patch \"${patchNumber}\" being checked out to \"${patchDbFolderName}/oracle\"","coDbModule")
+    commonPatchFunctions.log("DB Objects for patch \"${patchNumber}\" being checked out to \"${patchDbFolderName}/oracle\"","coDbModule")
     patchConfig.dbObjects.collect{it.moduleName}.unique().each { dbModule ->
-        log("- module \"${dbModule}\" tag \"${dbPatchTag}\" being checked out","coDbModule")
+        commonPatchFunctions.log("- module \"${dbModule}\" tag \"${dbPatchTag}\" being checked out","coDbModule")
         dir("${patchDbFolderName}/oracle") {
             def moduleDirectory = dbModule.replace(".","_")
             sh "cvs -d${env.CVS_ROOT} co -r${dbPatchTag} -d${moduleDirectory} ${dbModule}"
         }
     }
-    log("DB Objects for patch \"${patchNumber}\" checked out","coDbModule")
+    commonPatchFunctions.log("DB Objects for patch \"${patchNumber}\" checked out","coDbModule")
 
 }
 
@@ -125,7 +125,7 @@ def getCoPatchDbFolderName(patchConfig,target) {
 }
 
 def checkoutAndStashPackager(service) {
-    coFromBranchCvs(service.microServiceBranch,service.packagerName)
+    commonPatchFunctions.coFromBranchCvs(service.microServiceBranch,service.packagerName)
     dir(service.packagerName) {
         stash includes: "**/*", name: packagerStashNameFor(service)
     }
@@ -142,10 +142,10 @@ def buildAndReleaseModulesConcurrent(service,target,tag) {
         def depLevels = listsByDepLevel.keySet() as List
         depLevels.sort()
         depLevels.reverse(true)
-        log(depLevels, "buildAndReleaseModulesConcurrent")
+        commonPatchFunctions.log(depLevels, "buildAndReleaseModulesConcurrent")
         depLevels.each { depLevel ->
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
-            log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
+            commonPatchFunctions.log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
             def parallelBuilds = artifactsToBuildParallel.collectEntries {
                 ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, target, service)]
             }
@@ -165,7 +165,7 @@ def buildAndReleaseModulesConcurrent(tag, module, target, service) {
 def buildAndReleaseModule(module,service,target) {
     def revision = commonPatchFunctions.getRevisionFor(service,target)
     def mavenVersionNumber = mavenVersionNumber(service,revision)
-    log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
+    commonPatchFunctions.log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
     releaseModule(module,revision,service.revisionMnemoPart, mavenVersionNumber)
     buildModule(module,mavenVersionNumber)
     updateBom(service,target,module,mavenVersionNumber)
@@ -185,11 +185,11 @@ def updateBom(service,target,module,mavenVersionNumber) {
 
 def buildModule(module,buildVersion) {
     dir ("${module.name}") {
-        log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
+        commonPatchFunctions.log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
         // TODO JHE (06.10.2020): get active profile via env properties, or activate a default within settings.xml
         // TODO JHE (08.10.2020): to be checked if we want to install or deploy. Probably OK if it stays only on MavenLocal
         def mvnCommand = "mvn -DbomVersion=${buildVersion} ${env.MAVEN_PROFILE} clean install"
-        log("${mvnCommand}","buildModule")
+        commonPatchFunctions.log("${mvnCommand}","buildModule")
         lock ("BomUpdate${buildVersion}") {
             withMaven( maven: 'apache-maven-3.2.5') { sh "${mvnCommand}" }
         }
@@ -198,11 +198,11 @@ def buildModule(module,buildVersion) {
 
 def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
     dir ("${module.name}") {
-        log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart, "releaseModule")
+        commonPatchFunctions.log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart, "releaseModule")
         def buildVersion =  mavenVersionNumber
-        log("BuildVersion = ${buildVersion}","releaseModule")
+        commonPatchFunctions.log("BuildVersion = ${buildVersion}","releaseModule")
         def mvnCommand = "mvn ${env.MAVEN_PROFILE} -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + revisionMnemoPart + '-' + revision
-        log("${mvnCommand}","releaseModule")
+        commonPatchFunctions.log("${mvnCommand}","releaseModule")
         withMaven( maven: 'apache-maven-3.2.5') { sh "${mvnCommand}" }
     }
 }
@@ -231,7 +231,7 @@ def coFromTagcvs(tag, moduleName) {
                 ]]
         ], skipChangeLog: false])
     }
-    log("Checkout of ${moduleName} took ${duration} ms","coFromTagcvs")
+    commonPatchFunctions.log("Checkout of ${moduleName} took ${duration} ms","coFromTagcvs")
 }
 
 def tagName(patchConfig) {
@@ -253,34 +253,8 @@ def publishNewRevisionFor(service,patchConfig,target) {
 
 def bomBaseVersionFor(service) {
     def bbv = service.baseVersionNumber + "." + service.revisionMnemoPart
-    log("bomBaseVersion = ${bbv}, for service = ${service}", "bomBaseVersionFor")
+    commonPatchFunctions.log("bomBaseVersion = ${bbv}, for service = ${service}", "bomBaseVersionFor")
     return bbv
-}
-
-def coFromBranchCvs(cvsBranch, moduleName) {
-    def callBack = benchmark()
-    def duration = callBack {
-        checkout scm: ([$class: 'CVSSCM', canUseUpdate: true, checkoutCurrentTimestamp: false, cleanOnFailedUpdate: false, disableCvsQuiet: false, forceCleanCopy: true, legacy: false, pruneEmptyDirectories: false, repositories: [
-                [compressionLevel: -1, cvsRoot: env.CVS_ROOT, excludedRegions: [[pattern: '']], passwordRequired: false, repositoryItems: [
-                        [location: [$class: 'BranchRepositoryLocation', branchName: cvsBranch, useHeadIfNotFound: false],  modules: [
-                                [localName: moduleName, remoteName: moduleName]
-                        ]]
-                ]]
-        ], skipChangeLog: false])
-    }
-    log("Checkout of ${moduleName} took ${duration} ms","coFromBranchCvs")
-}
-
-// Used in order to have Datetime info in our pipelines
-def log(msg,caller) {
-    def dt = "${new Date().format('yyyy-MM-dd HH:mm:ss.S')}"
-    def logMsg = caller != null ? "(${caller}) ${dt}: ${msg}" : "${dt}: ${msg}"
-    echo logMsg
-}
-
-// Used in order to have Datetime info in our pipelines
-def log(msg) {
-    log(msg,null)
 }
 
 def benchmark() {
