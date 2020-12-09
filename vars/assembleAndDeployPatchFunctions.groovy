@@ -1,7 +1,6 @@
 #!groovy
 
 def assembleAndDeploy(target,parameter) {
-    commonPatchFunctions.log("assembleAndDeploy Job will be started for ${target} with following parameter ${parameter}","assembleAndDeploy")
     assertParameter(parameter)
     logPatchActivity(parameter.patches,target)
     checkoutPackagerProjects(parameter.gradlePackagerProjectAsVscPath)
