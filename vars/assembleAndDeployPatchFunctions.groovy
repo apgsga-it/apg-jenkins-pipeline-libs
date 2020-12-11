@@ -4,6 +4,22 @@ def assembleAndDeploy(target,parameter) {
     assertParameter(parameter)
     logPatchActivity(parameter.patches,target)
     checkoutPackagerProjects(parameter.gradlePackagerProjectAsVscPath)
+    assemble(parameter.gradlePackagerProjectAsVscPath)
+}
+
+def assemble(packagerProjectList) {
+    commonPatchFunctions.log("Assembling will be done for following packagers : ${packagerProjectList}", "checkoutPackagerProjects")
+    packagerProjectList.each{packager ->
+        commonPatchFunctions.log("Assembling ${packager} started.","assemble")
+
+        dir(packager) {
+            def cmd = "./gradlew clean -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
+            def result = sh ( returnStdout : true, script: cmd).trim()
+            println "result of ${cmd} : ${result}"
+        }
+
+        commonPatchFunctions.log("Assembling ${packager} done!","assemble")
+    }
 }
 
 def logPatchActivity(patchNumberList,target) {
