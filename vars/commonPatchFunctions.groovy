@@ -118,3 +118,13 @@ def coFromBranchCvs(cvsBranch, moduleName) {
     }
     log("Checkout of ${moduleName} took ${duration} ms","coFromBranchCvs")
 }
+
+def benchmark() {
+    def benchmarkCallback = { closure ->
+        start = System.currentTimeMillis()
+        closure.call()
+        now = System.currentTimeMillis()
+        now - start
+    }
+    benchmarkCallback
+}

@@ -221,7 +221,7 @@ def coFromTagCvsConcurrent(tag,moduleName) {
 }
 
 def coFromTagcvs(tag, moduleName) {
-    def callBack = benchmark()
+    def callBack = commonPatchFunctions.benchmark()
     def duration = callBack {
         checkout scm: ([$class: 'CVSSCM', canUseUpdate: true, checkoutCurrentTimestamp: false, cleanOnFailedUpdate: false, disableCvsQuiet: false, forceCleanCopy: true, legacy: false, pruneEmptyDirectories: false, repositories: [
                 [compressionLevel: -1, cvsRoot: env.CVS_ROOT, excludedRegions: [[pattern: '']], passwordRequired: false, repositoryItems: [
@@ -255,14 +255,4 @@ def bomBaseVersionFor(service) {
     def bbv = service.baseVersionNumber + "." + service.revisionMnemoPart
     commonPatchFunctions.log("bomBaseVersion = ${bbv}, for service = ${service}", "bomBaseVersionFor")
     return bbv
-}
-
-def benchmark() {
-    def benchmarkCallback = { closure ->
-        start = System.currentTimeMillis()
-        closure.call()
-        now = System.currentTimeMillis()
-        now - start
-    }
-    benchmarkCallback
 }
