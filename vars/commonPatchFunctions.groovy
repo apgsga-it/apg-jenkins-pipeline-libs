@@ -86,7 +86,7 @@ def notifyDb(patchConfig,stage,successNotification,errorNotification) {
 def logPatchActivity(def patchNumber, def target, def step, def logText) {
     node {
         // TODO JHE (06.11.2020) : -purl=localhost:9010 should be by default, or provided with parameter
-        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -log ${patchNummer},${target},${step},${logText}"
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -log ${patchNumber},${target},${step},${logText}"
         println "Executeing ${cmd}"
         sh "${cmd}"
         println "Executeing ${cmd} done."
