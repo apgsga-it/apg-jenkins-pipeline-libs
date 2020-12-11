@@ -14,7 +14,7 @@ def assemble(packagerProjectList) {
 
         dir(packager) {
             //def cmd = "./gradlew clean buildPkg -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
-            def cmd = "./gradlew clean buildPkg -PtargetHost=dev-chei211 -PinstallTarget=dev-chei211 -PbuildTyp=CLONED -PbaseVersion=1.0 -PcloneTargetPath=./clonedInformation -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --info --stacktrace"
+            def cmd = "./gradlew clean buildPkg -PtargetHost=dev-chei211 -PinstallTarget=dev-chei211 -PbuildTyp=CLONED -PbaseVersion=1.0 -PcloneTargetPath=clonedInformation -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --info --stacktrace"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
