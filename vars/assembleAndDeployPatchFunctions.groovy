@@ -13,8 +13,8 @@ def assemble(packagerProjectList) {
         commonPatchFunctions.log("Assembling ${packager} started.","assemble")
 
         dir(packager) {
-            //def cmd = "./gradlew clean buildPkg -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
-            def cmd = "./gradlew clean buildPkg -PinstallTarget=dev-chei211 -PbuildTyp=CLONED -PbaseVersion=1.0.0-DEV-ADMIN_UIMIG -PcloneTargetPath=${env.WORKSPACE}/clonedInformation -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --info --stacktrace"
+            //TODO JHE (11.12.2020) : Get all parameter values from parameters passed within JSON params ....
+            def cmd = "./gradlew clean buildPkg deployPkg -PtargetHost=192.168.159.128 -PinstallTarget=dev-chei211 -PbuildTyp=CLONED -PbaseVersion=1.0.0-DEV-ADMIN_UIMIG -PcloneTargetPath=${env.WORKSPACE}/clonedInformation -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --info --stacktrace"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
