@@ -243,11 +243,15 @@ def tagName(patchConfig) {
 }
 
 def publishNewRevisionFor(service,patchConfig,target) {
-    dir("servicePackagerProject") {
-        unstash packagerStashNameFor(service)
-        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchConfig.patchNummer}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
-        def result = sh ( returnStdout : true, script: cmd).trim()
-        println "result of ${cmd} : ${result}"
+    //TODO JHE (11.12.2020) : get the lock name from a parameter, and coordonate it with operations done during assembleAndDeploy
+    //                        Not sure it will be necessary, will depend on IT-36715
+    lock("revisionFileOperation") {
+        dir("servicePackagerProject") {
+            unstash packagerStashNameFor(service)
+            def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchConfig.patchNummer}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
+            def result = sh(returnStdout: true, script: cmd).trim()
+            println "result of ${cmd} : ${result}"
+        }
     }
 }
 
