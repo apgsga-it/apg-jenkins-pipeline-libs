@@ -25,10 +25,10 @@ def assembleAndDeployDb(target,parameter) {
 }
 
 def put(host,src,dest) {
-    patchfunctions.log("Putting ${src} on ${host} into ${dest}","put")
+    commonPatchFunctions.log("Putting ${src} on ${host} into ${dest}","put")
     def remote = getRemoteSSHConnection(host)
     sshPut remote: remote, from: src, into: dest
-    patchfunctions.log("DONE - Putting ${src} on ${host} into ${dest}","put")
+    commonPatchFunctions.log("DONE - Putting ${src} on ${host} into ${dest}","put")
 }
 
 def getRemoteSSHConnection(host) {
