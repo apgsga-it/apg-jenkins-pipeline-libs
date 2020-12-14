@@ -1,10 +1,52 @@
 #!groovy
 
-def assembleAndDeploy(target,parameter) {
-    logPatchActivity(parameter.patches,target,"started")
-    checkoutPackagerProjects(parameter.gradlePackagerProjectAsVscPath)
-    doAssembleAndDeploy(parameter.gradlePackagerProjectAsVscPath)
-    logPatchActivity(parameter.patches,target,"done")
+def assembleAndDeployJavaService(target,parameter) {
+    //TODO JHE (14.12.2020): Eventually the parameters will contain the info if we have to assemble the java part or not
+    if(parameter.gradlePackagerProjectAsVscPath.size() > 0) {
+        checkoutPackagerProjects(parameter.gradlePackagerProjectAsVscPath)
+        doAssembleAndDeploy(parameter.gradlePackagerProjectAsVscPath)
+    }
+    else {
+        commonPatchFunctions.log("No Java Services to be assembled!","assembleAndDeployJavaService")
+    }
+}
+
+def assembleAndDeployDb(target,parameter) {
+
+    //TODO JHE : need to get a parameter saying if a patch has a db-zip to be deployed or not
+    if(1==1) {
+        //TODO JHE : this will obviously be replaced, getting values from parameters, etc ..., here to test the copy of a zip
+        //TODO JHE : Also, we need to iterate over patches, probably
+        put("192.168.159.128","/var/jenkins/dbZips/patch_8001_DEV-CHEI211.zip","/home/apg_install/downloads/dbZips")
+    }
+    else {
+        commonPatchFunctions.log("No DB-Zip(s) to be deployed","assembleAndDeployJavaService")
+    }
+}
+
+def put(host,src,dest) {
+    patchfunctions.log("Putting ${src} on ${host} into ${dest}","put")
+    def remote = getRemoteSSHConnection(host)
+    sshPut remote: remote, from: src, into: dest
+    patchfunctions.log("DONE - Putting ${src} on ${host} into ${dest}","put")
+}
+
+def getRemoteSSHConnection(host) {
+
+    def remote = [:]
+    remote.name = "SSH-${host}"
+    remote.host = host
+    remote.allowAnyHosts = true
+//	remote.logLevel = "FINE"
+
+    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'sshCredentials',
+                      usernameVariable: 'SSHUsername', passwordVariable: 'SSHUserpassword']]) {
+
+        remote.user = SSHUsername
+        remote.password = SSHUserpassword
+    }
+
+    return remote
 }
 
 def doAssembleAndDeploy(packagerProjectList) {
