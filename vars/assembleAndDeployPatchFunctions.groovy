@@ -17,7 +17,7 @@ def assembleAndDeployDb(target,parameter) {
     if(1==1) {
         //TODO JHE : this will obviously be replaced, getting values from parameters, etc ..., here to test the copy of a zip
         //TODO JHE : Also, we need to iterate over patches, probably
-        put("192.168.159.128","/var/jenkins/dbZips/patch_8001_DEV-CHEI211.zip","/home/apg_install/downloads/dbZips")
+        put("192.168.159.128","/var/jenkins/dbZips/patch_8001_DEV-CHEI211.zip","/home/apg_install/downloads/dbZips/patch_8001_DEV-CHEI211.zip")
     }
     else {
         commonPatchFunctions.log("No DB-Zip(s) to be deployed","assembleAndDeployJavaService")
