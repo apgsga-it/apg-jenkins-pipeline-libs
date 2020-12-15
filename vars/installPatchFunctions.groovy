@@ -45,3 +45,11 @@ def checkoutPackagerProjects(packagerProjectList) {
         commonPatchFunctions.coFromBranchCvs("HEAD", packager)
     }
 }
+
+// TODO JHE (15.12.2020): Move this into commonPatchFunctions
+def logPatchActivity(patchNumberList,target,logText) {
+    commonPatchFunctions.log("Logging patch activity for ${patchNumberList}","logPatchActivity")
+    patchNumberList.each{patchNumber ->
+        commonPatchFunctions.logPatchActivity(patchNumber, target, "install", logText)
+    }
+}
