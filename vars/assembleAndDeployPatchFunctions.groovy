@@ -50,9 +50,9 @@ def getRemoteSSHConnection(host) {
 }
 
 def doAssembleAndDeploy(packagerProjectList) {
-    commonPatchFunctions.log("Assembling will be done for following packagers : ${packagerProjectList}", "checkoutPackagerProjects")
+    commonPatchFunctions.log("Assembling will be done for following packagers : ${packagerProjectList}", "doAssembleAndDeploy")
     packagerProjectList.each{packager ->
-        commonPatchFunctions.log("Assembling ${packager} started.","assemble")
+        commonPatchFunctions.log("Assembling ${packager} started.","doAssembleAndDeploy")
 
         dir(packager) {
             //TODO JHE (11.12.2020) : Get all parameter values from parameters passed within JSON params .... First waiting on IT-36505 to be done
@@ -61,7 +61,7 @@ def doAssembleAndDeploy(packagerProjectList) {
             println "result of ${cmd} : ${result}"
         }
 
-        commonPatchFunctions.log("Assembling ${packager} done!","assemble")
+        commonPatchFunctions.log("Assembling ${packager} done!","doAssembleAndDeploy")
     }
 }
 
