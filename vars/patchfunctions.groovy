@@ -125,13 +125,6 @@ def getCoPatchDbFolderName(jsonParam) {
 
 def checkoutAndStashPackager(service) {
     commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,service.packagerName)
-    dir(service.packagerName) {
-        stash includes: "**/*", name: packagerStashNameFor(service)
-    }
-}
-
-def packagerStashNameFor(service) {
-    return service.packagerName.replaceAll("/","")
 }
 
 def buildAndReleaseModulesConcurrent(service,target,tag) {
@@ -173,8 +166,7 @@ def buildAndReleaseModule(module,service,target) {
 // TODO JHE (07.10.2020): to be checked here, do we want to publish the bom on Artifactory ? Or enough to have it within MavenLocal?
 def updateBom(service,target,module,mavenVersionNumber) {
     lock ("BomUpdate${mavenVersionNumber}") {
-        dir("gradlePackagerProject") {
-            unstash packagerStashNameFor(service)
+        dir(service.packages.packagerName) {
             def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH}  --stacktrace --info"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
@@ -245,8 +237,7 @@ def publishNewRevisionFor(service,patchNumber,target) {
     //TODO JHE (11.12.2020) : get the lock name from a parameter, and coordonate it with operations done during assembleAndDeploy
     //                        Not sure it will be necessary, will depend on IT-36715
     lock("revisionFileOperation") {
-        dir("servicePackagerProject") {
-            unstash packagerStashNameFor(service)
+        dir(service.packages.packagerName) {
             def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
             def result = sh(returnStdout: true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
