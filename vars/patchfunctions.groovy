@@ -243,10 +243,15 @@ def tagName(jsonParam) {
 def publishNewRevisionFor(service,patchNumber,target) {
     //TODO JHE (11.12.2020) : get the lock name from a parameter, and coordonate it with operations done during assembleAndDeploy
     //                        Not sure it will be necessary, will depend on IT-36715
+
+    commonPatchFunctions.log("publishing new revision for service ${service} for patchNumber=${patchNumber} on target=${target}","publishNewRevisionFor")
+
     lock("revisionFileOperation") {
         service.packages.each{pack ->
+            commonPatchFunctions.log("Switching into following folder : ${pack.packgerName}","publishNewRevisionFor")
             dir(pack.packagerName) {
                 def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
+                commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
                 def result = sh(returnStdout: true, script: cmd).trim()
                 println "result of ${cmd} : ${result}"
             }
