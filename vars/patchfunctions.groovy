@@ -74,7 +74,7 @@ def dbBuild(jsonParam) {
     ])
 
     def installPatchContent = "@echo off\r\n"
-    installPatchContent += "@echo *** Installation von Patch 0900C_${jsonPAram.patchNumber} [Build von TODO get YYYY/MM/dd-HH:mm:ss]\r\n"
+    installPatchContent += "@echo *** Installation von Patch 0900C_${jsonParam.patchNumber} [Build von TODO get YYYY/MM/dd-HH:mm:ss]\r\n"
     installPatchContent += "set /p v_params=Geben Sie die Zielumgebung ein: \r\n"
     installPatchContent += "pushd %~dp0 \r\n\r\n"
     installPatchContent += "cmd /c \\\\cm-linux.apgsga.ch\\cm_ui\\it21_patch.bat %v_params%\r\n"
