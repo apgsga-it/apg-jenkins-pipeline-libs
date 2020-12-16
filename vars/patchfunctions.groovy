@@ -39,7 +39,7 @@ def patchBuildDbZip(jsonParam) {
 }
 
 def dbBuildRequired(jsonParam) {
-    return !patchConfig.dockerServices.isEmpty() || !patchConfig.dbObjects.isEmpty()
+    return !jsonParam.dockerServices.isEmpty() || !jsonParam.dbObjects.isEmpty()
 }
 
 def publishDbZip(jsonParam) {
@@ -74,7 +74,6 @@ def dbBuild(jsonParam) {
     ])
 
     def installPatchContent = "@echo off\r\n"
-    // TODO (jhe) :  0900C info doesn't exist at the moment witin patchConfig... also datetime ... do we have it somewhere?
     installPatchContent += "@echo *** Installation von Patch 0900C_${jsonPAram.patchNumber} [Build von TODO get YYYY/MM/dd-HH:mm:ss]\r\n"
     installPatchContent += "set /p v_params=Geben Sie die Zielumgebung ein: \r\n"
     installPatchContent += "pushd %~dp0 \r\n\r\n"
