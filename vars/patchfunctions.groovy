@@ -248,7 +248,7 @@ def publishNewRevisionFor(service,patchNumber,target) {
 
     lock("revisionFileOperation") {
         service.packages.each{pack ->
-            commonPatchFunctions.log("Switching into following folder : ${pack.packgerName}","publishNewRevisionFor")
+            commonPatchFunctions.log("Switching into following folder : ${pack.packagerName}","publishNewRevisionFor")
             dir(pack.packagerName) {
                 def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
                 commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
