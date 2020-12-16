@@ -1,49 +1,49 @@
 #!groovy
 
-def patchBuildsConcurrent(patchConfig,target) {
+def patchBuildsConcurrent(jsonParam) {
     node {
-            if(javaBuildRequired(patchConfig)) {
-                commonPatchFunctions.logPatchActivity(patchConfig.patchNummer,target,"build","started")
+            if(javaBuildRequired(jsonParam)) {
+                commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","started")
                 // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
-                patchConfig.services.each { service ->
+                jsonParam.services.each { service ->
                     (
-                            lock("${service.serviceName}-${target}-Build") {
+                            lock("${service.serviceName}-${jsonParam.target}-Build") {
                                 commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                                 deleteDir()
                                 checkoutAndStashPackager(service)
-                                publishNewRevisionFor(service, patchConfig, target)
-                                buildAndReleaseModulesConcurrent(service, target, tagName(patchConfig))
+                                publishNewRevisionFor(service, jsonParam.patchNumber, jsonParamtarget)
+                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(jsonParam))
                             }
                     )
                 }
-                commonPatchFunctions.logPatchActivity(patchConfig.patchNummer,target,"build","done")
+                commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","done")
             }
     }
 }
 
-def javaBuildRequired(patchConfig) {
-    return !patchConfig.services.isEmpty()
+def javaBuildRequired(jsonParam) {
+    return !jsonParam.services.isEmpty()
 }
 
-def patchBuildDbZip(patchConfig,target) {
-    if(dbBuildRequired(patchConfig)) {
-        lock("dbBuild-${target}-Build") {
-            commonPatchFunctions.logPatchActivity(patchConfig.patchNummer,target,"db-build","started")
+def patchBuildDbZip(jsonParam) {
+    if(dbBuildRequired(jsonParam)) {
+        lock("dbBuild-${jsonParam.target}-Build") {
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"db-build","started")
             deleteDir()
-            coDbModules(patchConfig,target)
-            dbBuild(patchConfig,target)
-            publishDbZip(patchConfig,target)
-            commonPatchFunctions.logPatchActivity(patchConfig.patchNummer,target,"db-build","done")
+            coDbModules(jsonParam)
+            dbBuild(jsonParam)
+            publishDbZip(jsonParam)
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"db-build","done")
         }
     }
 }
 
-def dbBuildRequired(patchConfig) {
-    return patchConfig.installDockerServices || !patchConfig.dbObjects.isEmpty()
+def dbBuildRequired(jsonParam) {
+    return !patchConfig.dockerServices.isEmpty() || !patchConfig.dbObjects.isEmpty()
 }
 
-def publishDbZip(patchConfig,target) {
-    def patchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
+def publishDbZip(jsonParam) {
+    def patchDbFolderName = getCoPatchDbFolderName(jsonParam)
     def zipName = "${patchDbFolderName}.zip"
     fileOperations ([
             fileDeleteOperation(includes: zipName)
@@ -55,8 +55,8 @@ def publishDbZip(patchConfig,target) {
     ])
 }
 
-def dbBuild(patchConfig,target) {
-    def PatchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
+def dbBuild(jsonParam) {
+    def PatchDbFolderName = getCoPatchDbFolderName(jsonParam)
     fileOperations ([
             folderCreateOperation(folderPath: "${PatchDbFolderName}\\config")
     ])
@@ -75,7 +75,7 @@ def dbBuild(patchConfig,target) {
 
     def installPatchContent = "@echo off\r\n"
     // TODO (jhe) :  0900C info doesn't exist at the moment witin patchConfig... also datetime ... do we have it somewhere?
-    installPatchContent += "@echo *** Installation von Patch 0900C_${patchConfig.patchNummer} [Build von TODO get YYYY/MM/dd-HH:mm:ss]\r\n"
+    installPatchContent += "@echo *** Installation von Patch 0900C_${jsonPAram.patchNumber} [Build von TODO get YYYY/MM/dd-HH:mm:ss]\r\n"
     installPatchContent += "set /p v_params=Geben Sie die Zielumgebung ein: \r\n"
     installPatchContent += "pushd %~dp0 \r\n\r\n"
     installPatchContent += "cmd /c \\\\cm-linux.apgsga.ch\\cm_ui\\it21_patch.bat %v_params%\r\n"
@@ -87,11 +87,11 @@ def dbBuild(patchConfig,target) {
 
 }
 
-def coDbModules(patchConfig,target) {
-    def dbObjects = patchConfig.dbObjectsAsVcsPath
+def coDbModules(jsonParam) {
+    def dbObjects = jsonParam.dbObjectsAsVcsPath
     commonPatchFunctions.log("Following DB Objects should get checked out : ${dbObjects}","coDbModules")
 
-    def patchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
+    def patchDbFolderName = getCoPatchDbFolderName(jsonParam)
     fileOperations ([
             folderDeleteOperation(folderPath: "${patchDbFolderName}")
     ])
@@ -105,11 +105,11 @@ def coDbModules(patchConfig,target) {
             folderCreateOperation(folderPath: "${patchDbFolderName}/oracle")
     ])
 
-    def patchNumber = patchConfig.patchNummer
-    def dbPatchTag = patchConfig.patchTag
+    def patchNumber = jsonParam.patchNumber
+    def dbPatchTag = jsonParam.patchTag
 
     commonPatchFunctions.log("DB Objects for patch \"${patchNumber}\" being checked out to \"${patchDbFolderName}/oracle\"","coDbModule")
-    patchConfig.dbObjects.collect{it.moduleName}.unique().each { dbModule ->
+    jsonParam.dbObjects.collect{it.moduleName}.unique().each { dbModule ->
         commonPatchFunctions.log("- module \"${dbModule}\" tag \"${dbPatchTag}\" being checked out","coDbModule")
         dir("${patchDbFolderName}/oracle") {
             def moduleDirectory = dbModule.replace(".","_")
@@ -120,12 +120,12 @@ def coDbModules(patchConfig,target) {
 
 }
 
-def getCoPatchDbFolderName(patchConfig,target) {
-    return "${patchConfig.dbPatchBranch}_${target}"
+def getCoPatchDbFolderName(jsonParam) {
+    return "${jsonParam.dbPatchBranch}_${jsonParam.target}"
 }
 
 def checkoutAndStashPackager(service) {
-    commonPatchFunctions.coFromBranchCvs(service.microServiceBranch,service.packagerName)
+    commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,service.packagerName)
     dir(service.packagerName) {
         stash includes: "**/*", name: packagerStashNameFor(service)
     }
@@ -234,21 +234,21 @@ def coFromTagcvs(tag, moduleName) {
     commonPatchFunctions.log("Checkout of ${moduleName} took ${duration} ms","coFromTagcvs")
 }
 
-def tagName(patchConfig) {
-    if (patchConfig.patchTag?.trim()) {
-        patchConfig.patchTag
+def tagName(jsonParam) {
+    if (jsonParam.patchTag?.trim()) {
+        jsonParam.patchTag
     } else {
-        patchConfig.developerBranch
+        jsonParam.developerBranch
     }
 }
 
-def publishNewRevisionFor(service,patchConfig,target) {
+def publishNewRevisionFor(service,patchNumber,target) {
     //TODO JHE (11.12.2020) : get the lock name from a parameter, and coordonate it with operations done during assembleAndDeploy
     //                        Not sure it will be necessary, will depend on IT-36715
     lock("revisionFileOperation") {
         dir("servicePackagerProject") {
             unstash packagerStashNameFor(service)
-            def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchConfig.patchNummer}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
+            def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
             def result = sh(returnStdout: true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
