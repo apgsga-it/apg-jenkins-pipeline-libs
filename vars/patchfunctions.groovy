@@ -172,6 +172,7 @@ def updateBom(service,target,module,mavenVersionNumber) {
         commonPatchFunctions.log("updateBom for service : ${service} / on target ${target}")
 
         service.serviceMetaData.packages.each{pack ->
+            commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
             dir(pack.packagerName) {
                 def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH}  --stacktrace --info"
                 def result = sh ( returnStdout : true, script: cmd).trim()
@@ -249,6 +250,7 @@ def publishNewRevisionFor(service,patchNumber,target) {
     lock("revisionFileOperation") {
         service.serviceMetaData.packages.each{pack ->
             commonPatchFunctions.log("Switching into following folder : ${pack.packagerName}","publishNewRevisionFor")
+            commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
             dir(pack.packagerName) {
                 def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
                 commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
