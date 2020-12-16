@@ -11,7 +11,7 @@ def patchBuildsConcurrent(jsonParam) {
                                 commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                                 deleteDir()
                                 checkoutPackager(service)
-                                publishNewRevisionFor(service, jsonParam.patchNumber, jsonParamtarget)
+                                publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target)
                                 buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(jsonParam))
                             }
                     )
