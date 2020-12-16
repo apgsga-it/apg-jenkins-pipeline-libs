@@ -160,7 +160,7 @@ def buildAndReleaseModule(module,service,target) {
     def revision = commonPatchFunctions.getRevisionFor(service,target)
     def mavenVersionNumber = mavenVersionNumber(service,revision)
     commonPatchFunctions.log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
-    releaseModule(module,revision,service.revisionMnemoPart, mavenVersionNumber)
+    releaseModule(module,revision,service.serviceMetaData.revisionMnemoPart, mavenVersionNumber)
     buildModule(module,mavenVersionNumber)
     updateBom(service,target,module,mavenVersionNumber)
 }
@@ -191,9 +191,9 @@ def buildModule(module,buildVersion) {
     }
 }
 
-def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
+def releaseModule(module,revision,revisionMnemoPart,mavenVersionNumber) {
     dir ("${module.name}") {
-        commonPatchFunctions.log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart, "releaseModule")
+        commonPatchFunctions.log("Releasing Module : " + module.name + " for Revision: " + revision + " and revisionMnemoPart " +  revisionMnemoPart, "releaseModule")
         def buildVersion =  mavenVersionNumber
         commonPatchFunctions.log("BuildVersion = ${buildVersion}","releaseModule")
         def mvnCommand = "mvn ${env.MAVEN_PROFILE} -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + revisionMnemoPart + '-' + revision
