@@ -10,7 +10,7 @@ def patchBuildsConcurrent(jsonParam) {
                             lock("${service.serviceName}-${jsonParam.target}-Build") {
                                 commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                                 deleteDir()
-                                checkoutAndStashPackager(service)
+                                checkoutPackager(service)
                                 publishNewRevisionFor(service, jsonParam.patchNumber, jsonParamtarget)
                                 buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(jsonParam))
                             }
@@ -123,8 +123,8 @@ def getCoPatchDbFolderName(jsonParam) {
     return "${jsonParam.dbPatchBranch}_${jsonParam.target}"
 }
 
-def checkoutAndStashPackager(service) {
-    commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,service.packages.packagerName)
+def checkoutPackager(service) {
+    commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,service.serviceMetaData.packages.packagerName)
 }
 
 def buildAndReleaseModulesConcurrent(service,target,tag) {
