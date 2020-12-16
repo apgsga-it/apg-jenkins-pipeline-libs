@@ -168,7 +168,7 @@ def buildAndReleaseModule(module,service,target) {
 // TODO JHE (07.10.2020): to be checked here, do we want to publish the bom on Artifactory ? Or enough to have it within MavenLocal?
 def updateBom(service,target,module,mavenVersionNumber) {
     lock ("BomUpdate${mavenVersionNumber}") {
-        services.packages.each{pack ->
+        service.packages.each{pack ->
             dir(pack) {
                 def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH}  --stacktrace --info"
                 def result = sh ( returnStdout : true, script: cmd).trim()
