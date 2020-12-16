@@ -131,7 +131,7 @@ def checkoutPackager(service) {
 
 def buildAndReleaseModulesConcurrent(service,target,tag) {
         // TODO JHE (05.10.2020): Probably missing on Service API -> mavenArtifactsToBuild
-        def artefacts = service.mavenArtifactsToBuild;
+        def artefacts = service.artifactsToPatch
         def listsByDepLevel = artefacts.groupBy { it.dependencyLevel }
         def depLevels = listsByDepLevel.keySet() as List
         depLevels.sort()
