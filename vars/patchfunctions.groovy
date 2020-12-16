@@ -10,7 +10,7 @@ def patchBuildsConcurrent(jsonParam) {
                             lock("${service.serviceName}-${jsonParam.target}-Build") {
                                 commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                                 deleteDir()
-                                checkoutPackager(service)
+                                //checkoutPackager(service)
                                 publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target)
                                 buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(jsonParam))
                             }
