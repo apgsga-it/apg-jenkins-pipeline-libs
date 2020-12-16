@@ -124,7 +124,7 @@ def getCoPatchDbFolderName(jsonParam) {
 }
 
 def checkoutAndStashPackager(service) {
-    commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,service.packagerName)
+    commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,service.packages.packagerName)
 }
 
 def buildAndReleaseModulesConcurrent(service,target,tag) {
