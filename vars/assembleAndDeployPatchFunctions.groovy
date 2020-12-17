@@ -1,6 +1,6 @@
 #!groovy
 
-def assembleAndDeployJavaService(target,parameter) {
+def assembleAndDeployJavaService(parameter) {
     //TODO JHE (14.12.2020): Eventually the parameters will contain the info if we have to assemble the java part or not
     if(parameter.gradlePackagerProjectAsVscPath.size() > 0) {
         checkoutPackagerProjects(parameter.gradlePackagerProjectAsVscPath)
@@ -11,7 +11,7 @@ def assembleAndDeployJavaService(target,parameter) {
     }
 }
 
-def assembleAndDeployDb(target,parameter) {
+def assembleAndDeployDb(parameter) {
 
     //TODO JHE : need to get a parameter saying if a patch has a db-zip to be deployed or not
     if(1==1) {
