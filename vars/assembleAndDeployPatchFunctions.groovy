@@ -1,9 +1,8 @@
 #!groovy
 
 def assembleAndDeployJavaService(parameter) {
-    //TODO JHE (14.12.2020): Eventually the parameters will contain the info if we have to assemble the java part or not
-    if(parameter.gradlePackagerProjectAsVscPath.size() > 0) {
-        checkoutPackagerProjects(parameter.gradlePackagerProjectAsVscPath)
+    if(parameter.packagers.size() > 0) {
+        checkoutPackagerProjects(parameter.packagers)
         doAssembleAndDeploy(parameter.gradlePackagerProjectAsVscPath)
     }
     else {
@@ -77,6 +76,6 @@ def checkoutPackagerProjects(packagerProjectList) {
     commonPatchFunctions.log("Following packager will be checked-out from CVS : ${packagerProjectList}", "checkoutPackagerProjects")
     packagerProjectList.each{packager ->
         // TODO JHE (09.12.2020) : Get "head" from service metadata or pass it along with parameters, waiting on IT-36505
-        commonPatchFunctions.coFromBranchCvs("HEAD", packager)
+        commonPatchFunctions.coFromBranchCvs(packager.vcsBranch, packager.name)
     }
 }
