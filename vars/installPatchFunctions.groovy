@@ -1,9 +1,8 @@
 #!groovy
 
-def installDb(target,parameter) {
-    //TODO JHE : need to get a parameter saying if a patch has a db-zip to be installed or not
+def installDb(parameter) {
+    //TODO JHE (18.12.2020) : check with UGE exactly how/where we want to install the DB from
     if(1==1) {
-        //TODO JHE (15.12.2020) : check with UGE exactly how/where we want to install the DB from
         println "installDB would be done here"
     }
     else {
@@ -11,11 +10,11 @@ def installDb(target,parameter) {
     }
 }
 
-def installJavaServices(target,parameter) {
+def installJavaServices(parameters) {
     //TODO JHE (14.12.2020): Eventually the parameters will contain the info if we have to assemble the java part or not
-    if(parameter.gradlePackagerProjectAsVscPath.size() > 0) {
-        checkoutPackagerProjects(parameter.gradlePackagerProjectAsVscPath)
-        doInstallJavaServices(parameter.gradlePackagerProjectAsVscPath)
+    if(parameter.packagers.size() > 0) {
+        checkoutPackagerProjects(parameter.packagers)
+        doInstallJavaServices(parameter.packagers,parameter.target)
     }
     else {
         commonPatchFunctions.log("No Java Services to be installed!","installJavaServices")
@@ -23,26 +22,24 @@ def installJavaServices(target,parameter) {
 
 }
 
-def doInstallJavaServices(packagerProjectList) {
-    commonPatchFunctions.log("Installation will be done for following packagers : ${packagerProjectList}", "doInstallJavaServices")
-    packagerProjectList.each{packager ->
-        commonPatchFunctions.log("Installing ${packager} started.","doInstallJavaServices")
-        dir(packager) {
-            //TODO JHE (11.12.2020) : Get all parameter values from parameters passed within JSON params .... First waiting on IT-36505 to be done
-            def cmd = "./gradlew clean installPkg -PtargetHost=192.168.159.128 -PinstallTarget=dev-chei211 -PbaseVersion=1.0.0-DEV-ADMIN_UIMIG -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --info --stacktrace"
+def doInstallJavaServices(packagers,target) {
+    commonPatchFunctions.log("Installation will be done for following packagers : ${packagers}", "doInstallJavaServices")
+    packagers.each{p ->
+        commonPatchFunctions.log("Installing ${p.name} started.","doInstallJavaServices")
+        dir(p.name) {
+            def cmd = "./gradlew clean installPkg -PtargetHost=${p.targetHost} -PinstallTarget=${target} -PbaseVersion=${p.baseVersion} -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --info --stacktrace"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
 
-        commonPatchFunctions.log("Installing ${packager} done!","doInstallJavaServices")
+        commonPatchFunctions.log("Installing ${p.name} done!","doInstallJavaServices")
     }
 }
 
-def checkoutPackagerProjects(packagerProjectList) {
-    commonPatchFunctions.log("Following packager will be checked-out from CVS : ${packagerProjectList}", "checkoutPackagerProjects")
-    packagerProjectList.each{packager ->
-        // TODO JHE (09.12.2020) : Get "head" from service metadata or pass it along with parameters, waiting on IT-36505
-        commonPatchFunctions.coFromBranchCvs("HEAD", packager)
+def checkoutPackagerProjects(packagers) {
+    commonPatchFunctions.log("Following packager will be checked-out from CVS : ${packagers}", "checkoutPackagerProjects")
+    packagers.each{p ->
+        commonPatchFunctions.coFromBranchCvs(p.vcsBranch, p.name)
     }
 }
 
