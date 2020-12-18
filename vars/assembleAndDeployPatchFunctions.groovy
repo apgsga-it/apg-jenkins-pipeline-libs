@@ -11,12 +11,11 @@ def assembleAndDeployJavaService(parameter) {
 }
 
 def assembleAndDeployDb(parameter) {
-
-    //TODO JHE : need to get a parameter saying if a patch has a db-zip to be deployed or not
-    if(1==1) {
-        //TODO JHE : this will obviously be replaced, getting values from parameters, etc ..., here to test the copy of a zip
-        //TODO JHE : Also, we need to iterate over patches, probably
-        put("192.168.159.128","/var/jenkins/dbZips/patch_8001_DEV-CHEI211.zip","/home/apg_install/downloads/dbZips/patch_8001_DEV-CHEI211.zip")
+    if(!parameter.dbZipNames.size() > 0) {
+        parameter.dbZipNames.each{dbZipName ->
+            // TODO JHE (18.12.2020) : to be verified with UGE on 13.12.2020 where we should deploy. Jenkins node? Probably it sas to be a Windows machine
+            put("192.168.159.128","${env.DBZIPS_FILE_PATH}/${dbZipName}","/home/apg_install/downloads/dbZips/patch_8001_DEV-CHEI211.zip")
+        }
     }
     else {
         commonPatchFunctions.log("No DB-Zip(s) to be deployed","assembleAndDeployJavaService")
@@ -61,7 +60,6 @@ def doAssembleAndDeploy(parameter) {
     }
 }
 
-// TODO JHE (15.12.2020): Move this into commonPatchFunctions
 def logPatchActivity(patchNumberList,target,logText) {
     commonPatchFunctions.log("Logging patch activity for ${patchNumberList}","logPatchActivity")
     patchNumberList.each{patchNumber ->
@@ -72,7 +70,6 @@ def logPatchActivity(patchNumberList,target,logText) {
 def checkoutPackagerProjects(packagerProjectList) {
     commonPatchFunctions.log("Following packager will be checked-out from CVS : ${packagerProjectList}", "checkoutPackagerProjects")
     packagerProjectList.each{packager ->
-        // TODO JHE (09.12.2020) : Get "head" from service metadata or pass it along with parameters, waiting on IT-36505
         commonPatchFunctions.coFromBranchCvs(packager.vcsBranch, packager.name)
     }
 }

@@ -32,7 +32,7 @@ def patchBuildDbZip(jsonParam) {
             deleteDir()
             coDbModules(jsonParam)
             dbBuild(jsonParam)
-            publishDbZip(jsonParam)
+            buildDbZip(jsonParam)
             commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"db-build","done")
         }
     }
@@ -42,7 +42,7 @@ def dbBuildRequired(jsonParam) {
     return !jsonParam.dockerServices.isEmpty() || !jsonParam.dbObjects.isEmpty()
 }
 
-def publishDbZip(jsonParam) {
+def buildDbZip(jsonParam) {
     def patchDbFolderName = getCoPatchDbFolderName(jsonParam)
     def zipName = "${patchDbFolderName}.zip"
     fileOperations ([
@@ -51,7 +51,7 @@ def publishDbZip(jsonParam) {
     zip zipFile: zipName, glob: "${patchDbFolderName}/**"
     // TODO JHE (09.10.2020) : /var/jenkins/dbZips -> get it from jenkins env variable
     fileOperations ([
-            fileCopyOperation(includes: zipName, targetLocation: "/var/jenkins/dbZips")
+            fileCopyOperation(includes: zipName, targetLocation: env.DBZIPS_FILE_PATH)
     ])
 }
 
