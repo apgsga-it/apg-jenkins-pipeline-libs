@@ -1,49 +1,49 @@
 #!groovy
 
-def patchBuildsConcurrent(patchConfig,target) {
+def patchBuildsConcurrent(jsonParam) {
     node {
-            if(javaBuildRequired(patchConfig)) {
-                commonPatchFunctions.logPatchActivity(patchConfig,target,"build","started")
+            if(javaBuildRequired(jsonParam)) {
+                commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","started")
                 // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
-                patchConfig.services.each { service ->
+                jsonParam.services.each { service ->
                     (
-                            lock("${service.serviceName}-${target}-Build") {
-                                log("Building following service : ${service}", "patchBuildsConcurrent")
+                            lock("${service.serviceName}-${jsonParam.target}-Build") {
+                                commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                                 deleteDir()
-                                checkoutAndStashPackager(service)
-                                publishNewRevisionFor(service, patchConfig, target)
-                                buildAndReleaseModulesConcurrent(service, target, tagName(patchConfig))
+                                //checkoutPackager(service)
+                                publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target)
+                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(jsonParam))
                             }
                     )
                 }
-                commonPatchFunctions.logPatchActivity(patchConfig,target,"build","done")
+                commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","done")
             }
     }
 }
 
-def javaBuildRequired(patchConfig) {
-    return !patchConfig.services.isEmpty()
+def javaBuildRequired(jsonParam) {
+    return !jsonParam.services.isEmpty()
 }
 
-def patchBuildDbZip(patchConfig,target) {
-    if(dbBuildRequired(patchConfig)) {
-        lock("dbBuild-${target}-Build") {
-            commonPatchFunctions.logPatchActivity(patchConfig,target,"db-build","started")
+def patchBuildDbZip(jsonParam) {
+    if(dbBuildRequired(jsonParam)) {
+        lock("dbBuild-${jsonParam.target}-Build") {
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"db-build","started")
             deleteDir()
-            coDbModules(patchConfig,target)
-            dbBuild(patchConfig,target)
-            publishDbZip(patchConfig,target)
-            commonPatchFunctions.logPatchActivity(patchConfig,target,"db-build","done")
+            coDbModules(jsonParam)
+            dbBuild(jsonParam)
+            buildDbZip(jsonParam)
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"db-build","done")
         }
     }
 }
 
-def dbBuildRequired(patchConfig) {
-    return patchConfig.installDockerServices || !patchConfig.dbObjects.isEmpty()
+def dbBuildRequired(jsonParam) {
+    return !jsonParam.dockerServices.isEmpty() || !jsonParam.dbObjects.isEmpty()
 }
 
-def publishDbZip(patchConfig,target) {
-    def patchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
+def buildDbZip(jsonParam) {
+    def patchDbFolderName = getCoPatchDbFolderName(jsonParam)
     def zipName = "${patchDbFolderName}.zip"
     fileOperations ([
             fileDeleteOperation(includes: zipName)
@@ -51,12 +51,12 @@ def publishDbZip(patchConfig,target) {
     zip zipFile: zipName, glob: "${patchDbFolderName}/**"
     // TODO JHE (09.10.2020) : /var/jenkins/dbZips -> get it from jenkins env variable
     fileOperations ([
-            fileCopyOperation(includes: zipName, targetLocation: "/var/jenkins/dbZips")
+            fileCopyOperation(includes: zipName, targetLocation: env.DBZIPS_FILE_PATH)
     ])
 }
 
-def dbBuild(patchConfig,target) {
-    def PatchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
+def dbBuild(jsonParam) {
+    def PatchDbFolderName = getCoPatchDbFolderName(jsonParam)
     fileOperations ([
             folderCreateOperation(folderPath: "${PatchDbFolderName}\\config")
     ])
@@ -74,8 +74,7 @@ def dbBuild(patchConfig,target) {
     ])
 
     def installPatchContent = "@echo off\r\n"
-    // TODO (jhe) :  0900C info doesn't exist at the moment witin patchConfig... also datetime ... do we have it somewhere?
-    installPatchContent += "@echo *** Installation von Patch 0900C_${patchConfig.patchNummer} [Build von TODO get YYYY/MM/dd-HH:mm:ss]\r\n"
+    installPatchContent += "@echo *** Installation von Patch 0900C_${jsonParam.patchNumber} [Build von TODO get YYYY/MM/dd-HH:mm:ss]\r\n"
     installPatchContent += "set /p v_params=Geben Sie die Zielumgebung ein: \r\n"
     installPatchContent += "pushd %~dp0 \r\n\r\n"
     installPatchContent += "cmd /c \\\\cm-linux.apgsga.ch\\cm_ui\\it21_patch.bat %v_params%\r\n"
@@ -87,11 +86,11 @@ def dbBuild(patchConfig,target) {
 
 }
 
-def coDbModules(patchConfig,target) {
-    def dbObjects = patchConfig.dbObjectsAsVcsPath
-    log("Following DB Objects should get checked out : ${dbObjects}","coDbModules")
+def coDbModules(jsonParam) {
+    def dbObjects = jsonParam.dbObjectsAsVcsPath
+    commonPatchFunctions.log("Following DB Objects should get checked out : ${dbObjects}","coDbModules")
 
-    def patchDbFolderName = getCoPatchDbFolderName(patchConfig,target)
+    def patchDbFolderName = getCoPatchDbFolderName(jsonParam)
     fileOperations ([
             folderDeleteOperation(folderPath: "${patchDbFolderName}")
     ])
@@ -105,47 +104,42 @@ def coDbModules(patchConfig,target) {
             folderCreateOperation(folderPath: "${patchDbFolderName}/oracle")
     ])
 
-    def patchNumber = patchConfig.patchNummer
-    def dbPatchTag = patchConfig.patchTag
+    def patchNumber = jsonParam.patchNumber
+    def dbPatchTag = jsonParam.patchTag
 
-    log("DB Objects for patch \"${patchNumber}\" being checked out to \"${patchDbFolderName}/oracle\"","coDbModule")
-    patchConfig.dbObjects.collect{it.moduleName}.unique().each { dbModule ->
-        log("- module \"${dbModule}\" tag \"${dbPatchTag}\" being checked out","coDbModule")
+    commonPatchFunctions.log("DB Objects for patch \"${patchNumber}\" being checked out to \"${patchDbFolderName}/oracle\"","coDbModule")
+    jsonParam.dbObjects.collect{it.moduleName}.unique().each { dbModule ->
+        commonPatchFunctions.log("- module \"${dbModule}\" tag \"${dbPatchTag}\" being checked out","coDbModule")
         dir("${patchDbFolderName}/oracle") {
             def moduleDirectory = dbModule.replace(".","_")
             sh "cvs -d${env.CVS_ROOT} co -r${dbPatchTag} -d${moduleDirectory} ${dbModule}"
         }
     }
-    log("DB Objects for patch \"${patchNumber}\" checked out","coDbModule")
+    commonPatchFunctions.log("DB Objects for patch \"${patchNumber}\" checked out","coDbModule")
 
 }
 
-def getCoPatchDbFolderName(patchConfig,target) {
-    return "${patchConfig.dbPatchBranch}_${target}"
+def getCoPatchDbFolderName(jsonParam) {
+    return "${jsonParam.dbPatchBranch}_${jsonParam.target}"
 }
 
-def checkoutAndStashPackager(service) {
-    coFromBranchCvs(service.microServiceBranch,service.packagerName)
-    dir(service.packagerName) {
-        stash includes: "**/*", name: packagerStashNameFor(service)
+def checkoutPackager(service) {
+    service.serviceMetaData.packages.each{pack ->
+        commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
     }
-}
-
-def packagerStashNameFor(service) {
-    return service.packagerName.replaceAll("/","")
 }
 
 def buildAndReleaseModulesConcurrent(service,target,tag) {
         // TODO JHE (05.10.2020): Probably missing on Service API -> mavenArtifactsToBuild
-        def artefacts = service.mavenArtifactsToBuild;
+        def artefacts = service.artifactsToPatch
         def listsByDepLevel = artefacts.groupBy { it.dependencyLevel }
         def depLevels = listsByDepLevel.keySet() as List
         depLevels.sort()
         depLevels.reverse(true)
-        log(depLevels, "buildAndReleaseModulesConcurrent")
+        commonPatchFunctions.log(depLevels, "buildAndReleaseModulesConcurrent")
         depLevels.each { depLevel ->
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
-            log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
+            commonPatchFunctions.log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
             def parallelBuilds = artifactsToBuildParallel.collectEntries {
                 ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, target, service)]
             }
@@ -165,8 +159,8 @@ def buildAndReleaseModulesConcurrent(tag, module, target, service) {
 def buildAndReleaseModule(module,service,target) {
     def revision = commonPatchFunctions.getRevisionFor(service,target)
     def mavenVersionNumber = mavenVersionNumber(service,revision)
-    log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
-    releaseModule(module,revision,service.revisionMnemoPart, mavenVersionNumber)
+    commonPatchFunctions.log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
+    releaseModule(module,revision,service.serviceMetaData.revisionMnemoPart, mavenVersionNumber)
     buildModule(module,mavenVersionNumber)
     updateBom(service,target,module,mavenVersionNumber)
 }
@@ -174,41 +168,46 @@ def buildAndReleaseModule(module,service,target) {
 // TODO JHE (07.10.2020): to be checked here, do we want to publish the bom on Artifactory ? Or enough to have it within MavenLocal?
 def updateBom(service,target,module,mavenVersionNumber) {
     lock ("BomUpdate${mavenVersionNumber}") {
-        dir("gradlePackagerProject") {
-            unstash packagerStashNameFor(service)
-            def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH}  --stacktrace --info"
-            def result = sh ( returnStdout : true, script: cmd).trim()
-            println "result of ${cmd} : ${result}"
+
+        commonPatchFunctions.log("updateBom for service : ${service} / on target ${target}")
+
+        service.serviceMetaData.packages.each{pack ->
+            commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
+            dir(pack.packagerName) {
+                def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH}  --stacktrace --info"
+                def result = sh ( returnStdout : true, script: cmd).trim()
+                println "result of ${cmd} : ${result}"
+            }
         }
     }
 }
 
 def buildModule(module,buildVersion) {
     dir ("${module.name}") {
-        log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
+        commonPatchFunctions.log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
         // TODO JHE (06.10.2020): get active profile via env properties, or activate a default within settings.xml
         // TODO JHE (08.10.2020): to be checked if we want to install or deploy. Probably OK if it stays only on MavenLocal
-        def mvnCommand = "mvn -DbomVersion=${buildVersion} -Partifactory-jhe clean install"
-        log("${mvnCommand}","buildModule")
+        def mvnCommand = "mvn -DbomVersion=${buildVersion} ${env.MAVEN_PROFILE} clean install"
+        commonPatchFunctions.log("${mvnCommand}","buildModule")
         lock ("BomUpdate${buildVersion}") {
             withMaven( maven: 'apache-maven-3.2.5') { sh "${mvnCommand}" }
         }
     }
 }
 
-def releaseModule(module,revision,revisionMnemoPart, mavenVersionNumber) {
+def releaseModule(module,revision,revisionMnemoPart,mavenVersionNumber) {
     dir ("${module.name}") {
-        log("Releasing Module : " + module.name + " for Revision: " + revision + " and: " +  revisionMnemoPart, "releaseModule")
+        commonPatchFunctions.log("Releasing Module : " + module.name + " for Revision: " + revision + " and revisionMnemoPart " +  revisionMnemoPart, "releaseModule")
         def buildVersion =  mavenVersionNumber
-        log("BuildVersion = ${buildVersion}","releaseModule")
-        def mvnCommand = "mvn -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + revisionMnemoPart + '-' + revision
-        log("${mvnCommand}","releaseModule")
+        commonPatchFunctions.log("BuildVersion = ${buildVersion}","releaseModule")
+        def mvnCommand = "mvn ${env.MAVEN_PROFILE} -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + revisionMnemoPart + '-' + revision
+        commonPatchFunctions.log("${mvnCommand}","releaseModule")
         withMaven( maven: 'apache-maven-3.2.5') { sh "${mvnCommand}" }
     }
 }
 
 def mavenVersionNumber(service,revision) {
-    def mavenVersion = revision?.trim() ? service.baseVersionNumber + "." + service.revisionMnemoPart + "-" + revision : service.baseVersionNumber + "." + service.revisionMnemoPart
+    def mavenVersion = revision?.trim() ? service.serviceMetaData.baseVersionNumber + "." + service.serviceMetaData.revisionMnemoPart + "-" + revision : service.serviceMetaData.baseVersionNumber + "." + service.serviceMetaData.revisionMnemoPart
     println "mavenVersionNumber = ${mavenVersion}"
     return mavenVersion
 }
@@ -221,7 +220,7 @@ def coFromTagCvsConcurrent(tag,moduleName) {
 }
 
 def coFromTagcvs(tag, moduleName) {
-    def callBack = benchmark()
+    def callBack = commonPatchFunctions.benchmark()
     def duration = callBack {
         checkout scm: ([$class: 'CVSSCM', canUseUpdate: true, checkoutCurrentTimestamp: false, cleanOnFailedUpdate: false, disableCvsQuiet: false, forceCleanCopy: true, legacy: false, pruneEmptyDirectories: false, repositories: [
                 [compressionLevel: -1, cvsRoot: env.CVS_ROOT, excludedRegions: [[pattern: '']], passwordRequired: false, repositoryItems: [
@@ -231,64 +230,39 @@ def coFromTagcvs(tag, moduleName) {
                 ]]
         ], skipChangeLog: false])
     }
-    log("Checkout of ${moduleName} took ${duration} ms","coFromTagcvs")
+    commonPatchFunctions.log("Checkout of ${moduleName} took ${duration} ms","coFromTagcvs")
 }
 
-def tagName(patchConfig) {
-    if (patchConfig.patchTag?.trim()) {
-        patchConfig.patchTag
+def tagName(jsonParam) {
+    if (jsonParam.patchTag?.trim()) {
+        jsonParam.patchTag
     } else {
-        patchConfig.developerBranch
+        jsonParam.developerBranch
     }
 }
 
-def publishNewRevisionFor(service,patchConfig,target) {
-    dir("servicePackagerProject") {
-        unstash packagerStashNameFor(service)
-        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchConfig.patchNummer}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
-        def result = sh ( returnStdout : true, script: cmd).trim()
-        println "result of ${cmd} : ${result}"
+def publishNewRevisionFor(service,patchNumber,target) {
+    //TODO JHE (11.12.2020) : get the lock name from a parameter, and coordonate it with operations done during assembleAndDeploy
+    //                        Not sure it will be necessary, will depend on IT-36715
+
+    commonPatchFunctions.log("publishing new revision for service ${service} for patchNumber=${patchNumber} on target=${target}","publishNewRevisionFor")
+
+    lock("revisionFileOperation") {
+        service.serviceMetaData.packages.each{pack ->
+            commonPatchFunctions.log("Switching into following folder : ${pack.packagerName}","publishNewRevisionFor")
+            commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
+            dir(pack.packagerName) {
+                def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
+                commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
+                def result = sh(returnStdout: true, script: cmd).trim()
+                println "result of ${cmd} : ${result}"
+            }
+        }
     }
 }
 
 def bomBaseVersionFor(service) {
-    def bbv = service.baseVersionNumber + "." + service.revisionMnemoPart
-    log("bomBaseVersion = ${bbv}, for service = ${service}", "bomBaseVersionFor")
+    def bbv = service.serviceMetaData.baseVersionNumber + "." + service.serviceMetaData.revisionMnemoPart
+    commonPatchFunctions.log("bomBaseVersion = ${bbv}, for service = ${service}", "bomBaseVersionFor")
     return bbv
-}
-
-def coFromBranchCvs(cvsBranch, moduleName) {
-    def callBack = benchmark()
-    def duration = callBack {
-        checkout scm: ([$class: 'CVSSCM', canUseUpdate: true, checkoutCurrentTimestamp: false, cleanOnFailedUpdate: false, disableCvsQuiet: false, forceCleanCopy: true, legacy: false, pruneEmptyDirectories: false, repositories: [
-                [compressionLevel: -1, cvsRoot: env.CVS_ROOT, excludedRegions: [[pattern: '']], passwordRequired: false, repositoryItems: [
-                        [location: [$class: 'BranchRepositoryLocation', branchName: cvsBranch, useHeadIfNotFound: false],  modules: [
-                                [localName: moduleName, remoteName: moduleName]
-                        ]]
-                ]]
-        ], skipChangeLog: false])
-    }
-    log("Checkout of ${moduleName} took ${duration} ms","coFromBranchCvs")
-}
-
-// Used in order to have Datetime info in our pipelines
-def log(msg,caller) {
-    def dt = "${new Date().format('yyyy-MM-dd HH:mm:ss.S')}"
-    def logMsg = caller != null ? "(${caller}) ${dt}: ${msg}" : "${dt}: ${msg}"
-    echo logMsg
-}
-
-// Used in order to have Datetime info in our pipelines
-def log(msg) {
-    log(msg,null)
-}
-
-def benchmark() {
-    def benchmarkCallback = { closure ->
-        start = System.currentTimeMillis()
-        closure.call()
-        now = System.currentTimeMillis()
-        now - start
-    }
-    benchmarkCallback
 }
