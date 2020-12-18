@@ -12,7 +12,7 @@ def installDb(parameter) {
 
 def installJavaServices(parameters) {
     //TODO JHE (14.12.2020): Eventually the parameters will contain the info if we have to assemble the java part or not
-    if(parameter.packagers.size() > 0) {
+    if(parameters.packagers.size() > 0) {
         checkoutPackagerProjects(parameter.packagers)
         doInstallJavaServices(parameter.packagers,parameter.target)
     }
