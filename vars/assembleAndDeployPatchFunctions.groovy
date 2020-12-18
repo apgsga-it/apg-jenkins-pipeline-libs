@@ -3,7 +3,7 @@
 def assembleAndDeployJavaService(parameter) {
     if(parameter.packagers.size() > 0) {
         checkoutPackagerProjects(parameter.packagers)
-        doAssembleAndDeploy(parameter.packagers)
+        doAssembleAndDeploy(parameter)
     }
     else {
         commonPatchFunctions.log("No Java Services to be assembled!","assembleAndDeployJavaService")
@@ -48,18 +48,15 @@ def getRemoteSSHConnection(host) {
     return remote
 }
 
-def doAssembleAndDeploy(packagers) {
-    commonPatchFunctions.log("Assembling will be done for following packagers : ${packagers}", "doAssembleAndDeploy")
-    packagers.each{packager ->
+def doAssembleAndDeploy(parameter) {
+    commonPatchFunctions.log("Assembling will be done for following packagers : ${parameter.packagers}", "doAssembleAndDeploy")
+    parameter.packagers.each{packager ->
         commonPatchFunctions.log("Assembling ${packager.name} started.","doAssembleAndDeploy")
-
         dir(packager.name) {
-            //TODO JHE (11.12.2020) : Get all parameter values from parameters passed within JSON params .... First waiting on IT-36505 to be done
-            def cmd = "./gradlew clean buildPkg deployPkg -PtargetHost=192.168.159.128 -PinstallTarget=dev-chei211 -PbuildTyp=CLONED -PbaseVersion=1.0.0-DEV-ADMIN_UIMIG -PcloneTargetPath=${env.WORKSPACE}/clonedInformation -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --info --stacktrace"
+            def cmd = "./gradlew clean buildPkg deployPkg -PtargetHost=${packager.targetHost} -PinstallTarget=${parameter.target} -PbuildTyp=CLONED -PbaseVersion=${parameter.baseVersion} -PcloneTargetPath=${env.WORKSPACE}/clonedInformation -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --info --stacktrace"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
-
         commonPatchFunctions.log("Assembling ${packager.name} done!","doAssembleAndDeploy")
     }
 }
