@@ -15,7 +15,7 @@ def readJsonFile(def jsonAsText) {
     json
 }
 
-// TODO JHE (06.10.2020): This might/could be centralized somewhere else
+// JHE (06.10.2020): This might/could be centralized somewhere else
 def getRevisionFor(service,target) {
 
     def jsonFilePath = "${env.REVISIONS_FILES_PATH}/Revisions.json"
@@ -60,23 +60,10 @@ def getStatusCodeFor(patchConfig,target,toStage) {
     return state
 }
 
-def savePatchConfigState(patchConfig) {
-    node {
-        println "Saving Patchconfig State ${patchConfig.patchNummer}"
-        def patchFileName = "Patch${patchConfig.patchNummer}.json"
-        writeFile file: patchFileName , text: new JsonBuilder(patchConfig).toPrettyString()
-        // TODO JHE (06.11.2020) : -purl=localhost:9010 should be by default, or provided with parameter
-        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -sa ${patchFileName}"
-        println "Executeing ${cmd}"
-        sh "${cmd}"
-        println "DONE - ${cmd}"
-    }
-}
-
 def notifyDb(patchNumber,stage,successNotification,errorNotification) {
     node {
         println "Notifying DB for ${patchNumber} for stage ${stage} with successNotification=${successNotification} and errorNotification=${errorNotification}"
-        // TODO JHE (06.11.2020) : -purl=localhost:9010 should be by default, or provided with parameter
+        // TODO JHE (06.11.2020) : -purl=localhost:9010 shouldn't be hardcoded -> IT-36778
         def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -notifydb ${patchNumber},${stage},${successNotification},${errorNotification}"
         sh "${cmd}"
         println "DONE - ${cmd}"
@@ -85,7 +72,7 @@ def notifyDb(patchNumber,stage,successNotification,errorNotification) {
 
 def logPatchActivity(def patchNumber, def target, def step, def logText) {
     node {
-        // TODO JHE (06.11.2020) : -purl=localhost:9010 should be by default, or provided with parameter
+        // TODO JHE (06.11.2020) : -purl=localhost:9010 shouldn't be hardcoded -> IT-36778
         def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -log ${patchNumber},${target},${step},${logText}"
         println "Executeing ${cmd}"
         sh "${cmd}"

@@ -4,7 +4,7 @@ def patchBuildsConcurrent(jsonParam) {
     node {
             if(javaBuildRequired(jsonParam)) {
                 commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","started")
-                // TODO JHE (05.10.2020): do we want to parallelize service build as well ? maybe not a prio in this first release
+                // TODO JHE (05.10.2020): We could build service in parallel, but not a priority for the first release
                 jsonParam.services.each { service ->
                     (
                             lock("${service.serviceName}-${jsonParam.target}-Build") {
@@ -49,7 +49,6 @@ def buildDbZip(jsonParam) {
             fileDeleteOperation(includes: zipName)
     ])
     zip zipFile: zipName, glob: "${patchDbFolderName}/**"
-    // TODO JHE (09.10.2020) : /var/jenkins/dbZips -> get it from jenkins env variable
     fileOperations ([
             fileCopyOperation(includes: zipName, targetLocation: env.DBZIPS_FILE_PATH)
     ])
@@ -130,7 +129,6 @@ def checkoutPackager(service) {
 }
 
 def buildAndReleaseModulesConcurrent(service,target,tag) {
-        // TODO JHE (05.10.2020): Probably missing on Service API -> mavenArtifactsToBuild
         def artefacts = service.artifactsToPatch
         def listsByDepLevel = artefacts.groupBy { it.dependencyLevel }
         def depLevels = listsByDepLevel.keySet() as List
@@ -165,7 +163,6 @@ def buildAndReleaseModule(module,service,target) {
     updateBom(service,target,module,mavenVersionNumber)
 }
 
-// TODO JHE (07.10.2020): to be checked here, do we want to publish the bom on Artifactory ? Or enough to have it within MavenLocal?
 def updateBom(service,target,module,mavenVersionNumber) {
     lock ("BomUpdate${mavenVersionNumber}") {
 
@@ -185,8 +182,7 @@ def updateBom(service,target,module,mavenVersionNumber) {
 def buildModule(module,buildVersion) {
     dir ("${module.name}") {
         commonPatchFunctions.log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
-        // TODO JHE (06.10.2020): get active profile via env properties, or activate a default within settings.xml
-        // TODO JHE (08.10.2020): to be checked if we want to install or deploy. Probably OK if it stays only on MavenLocal
+        // TODO JHE (08.10.2020): should we deploy to Artifactory -> IT-36781
         def mvnCommand = "mvn -DbomVersion=${buildVersion} ${env.MAVEN_PROFILE} clean install"
         commonPatchFunctions.log("${mvnCommand}","buildModule")
         lock ("BomUpdate${buildVersion}") {
@@ -242,11 +238,8 @@ def tagName(jsonParam) {
 }
 
 def publishNewRevisionFor(service,patchNumber,target) {
-    //TODO JHE (11.12.2020) : get the lock name from a parameter, and coordonate it with operations done during assembleAndDeploy
-    //                        Not sure it will be necessary, will depend on IT-36715
-
     commonPatchFunctions.log("publishing new revision for service ${service} for patchNumber=${patchNumber} on target=${target}","publishNewRevisionFor")
-
+    //TODO JHE (07.01.2021): Depending on the implementation of IT-36715, we might be able to remove this lock
     lock("revisionFileOperation") {
         service.serviceMetaData.packages.each{pack ->
             commonPatchFunctions.log("Switching into following folder : ${pack.packagerName}","publishNewRevisionFor")
