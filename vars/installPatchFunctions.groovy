@@ -1,7 +1,7 @@
 #!groovy
 
 def installDb(parameter) {
-    //TODO JHE (18.12.2020) : check with UGE exactly how/where we want to install the DB from
+    //TODO JHE (18.12.2020) : will be implemented within scope of IT-36396
     if(1==1) {
         println "installDB would be done here"
     }
@@ -11,7 +11,6 @@ def installDb(parameter) {
 }
 
 def installJavaServices(parameters) {
-    //TODO JHE (14.12.2020): Eventually the parameters will contain the info if we have to assemble the java part or not
     if(parameters.packagers.size() > 0) {
         checkoutPackagerProjects(parameters.packagers)
         doInstallJavaServices(parameters.packagers,parameters.target)
@@ -43,7 +42,6 @@ def checkoutPackagerProjects(packagers) {
     }
 }
 
-// TODO JHE (15.12.2020): Move this into commonPatchFunctions
 def logPatchActivity(patchNumberList,target,logText) {
     commonPatchFunctions.log("Logging patch activity for ${patchNumberList}","logPatchActivity")
     patchNumberList.each{patchNumber ->
