@@ -203,7 +203,7 @@ def releaseModule(module,revision,revisionMnemoPart,mavenVersionNumber) {
 }
 
 def mavenVersionNumber(service,revision) {
-    def mavenVersion = revision?.trim() ? service.serviceMetaData.baseVersionNumber + "." + service.serviceMetaData.revisionMnemoPart + "-" + revision : service.serviceMetaData.baseVersionNumber + "." + service.serviceMetaData.revisionMnemoPart
+    def mavenVersion = revision?.trim() ? service.serviceMetaData.baseVersionNumber + "." + service.serviceMetaData.revisionMnemoPart + "-" + revision : service.serviceMetaData.baseVersionNumber + "." + service.serviceMetaData.revisionMnemoPart + "-SNAPSHOT"
     println "mavenVersionNumber = ${mavenVersion}"
     return mavenVersion
 }
