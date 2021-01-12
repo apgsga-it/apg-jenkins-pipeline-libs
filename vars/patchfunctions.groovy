@@ -171,7 +171,7 @@ def updateBom(service,target,module,mavenVersionNumber) {
         service.serviceMetaData.packages.each{pack ->
             commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
             dir(pack.packagerName) {
-                def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH}  --stacktrace --info"
+                def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} ${GRADLE_OPTS}"
                 def result = sh ( returnStdout : true, script: cmd).trim()
                 println "result of ${cmd} : ${result}"
             }
@@ -245,7 +245,7 @@ def publishNewRevisionFor(service,patchNumber,target) {
             commonPatchFunctions.log("Switching into following folder : ${pack.packagerName}","publishNewRevisionFor")
             commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
             dir(pack.packagerName) {
-                def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --stacktrace --info"
+                def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH ${GRADLE_OPTS}"
                 commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
                 def result = sh(returnStdout: true, script: cmd).trim()
                 println "result of ${cmd} : ${result}"
