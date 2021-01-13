@@ -12,7 +12,7 @@ def patchBuildsConcurrent(jsonParam) {
                                 deleteDir()
                                 //checkoutPackager(service)
                                 publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target)
-                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(jsonParam))
+                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(jsonParam.service, jsonParam))
                             }
                     )
                 }
@@ -104,7 +104,7 @@ def coDbModules(jsonParam) {
     ])
 
     def patchNumber = jsonParam.patchNumber
-    def dbPatchTag = jsonParam.patchTag
+    def dbPatchTag = jsonParam.dbPatch.patchTag
 
     commonPatchFunctions.log("DB Objects for patch \"${patchNumber}\" being checked out to \"${patchDbFolderName}/oracle\"","coDbModule")
     jsonParam.dbObjects.collect{it.moduleName}.unique().each { dbModule ->
@@ -229,9 +229,9 @@ def coFromTagcvs(tag, moduleName) {
     commonPatchFunctions.log("Checkout of ${moduleName} took ${duration} ms","coFromTagcvs")
 }
 
-def tagName(jsonParam) {
-    if (jsonParam.patchTag?.trim()) {
-        jsonParam.patchTag
+def tagName(service,jsonParam) {
+    if (service.patchTag?.trim()) {
+        service.patchTag
     } else {
         jsonParam.developerBranch
     }
