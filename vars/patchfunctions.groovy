@@ -12,7 +12,7 @@ def patchBuildsConcurrent(jsonParam) {
                                 deleteDir()
                                 //checkoutPackager(service)
                                 publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target)
-                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(jsonParam.service, jsonParam))
+                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(service, jsonParam))
                             }
                     )
                 }
