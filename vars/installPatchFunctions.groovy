@@ -26,7 +26,7 @@ def doInstallJavaServices(packagers,target) {
     packagers.each{p ->
         commonPatchFunctions.log("Installing ${p.name} started.","doInstallJavaServices")
         dir(p.name) {
-            def cmd = "./gradlew clean installPkg -PtargetHost=${p.targetHost} -PinstallTarget=${target} -PbaseVersion=${p.baseVersion} -Dgradle.user.home=${env.GRADLE_USER_HOME_PATH} --info --stacktrace"
+            def cmd = "./gradlew clean installPkg -PtargetHost=${p.targetHost} -PinstallTarget=${target} -PbaseVersion=${p.baseVersion} ${env.GRADLE_OPTS} --info --stacktrace"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
