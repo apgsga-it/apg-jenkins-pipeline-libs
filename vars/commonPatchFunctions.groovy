@@ -1,7 +1,6 @@
 #!groovy
 
 import groovy.json.JsonSlurperClassic
-import groovy.json.JsonBuilder
 
 def readPatchJsonFileFromStash(def stashName) {
     node {

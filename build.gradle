@@ -36,6 +36,7 @@ task sourceJar(type: Jar, dependsOn: classes) {
 
 dependencies {
    	compile group: 'org.codehaus.groovy' , name: 'groovy-all', version: '2.4.9'
+	compile group: 'org.codehaus.groovy', name: 'groovy-json', version: '2.4.9'
 	compile group: 'javax.mail', name: 'mail', version: '1.4.1'
 	compile group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.222'
 	compile group: 'javax.servlet', name: 'servlet-api', version: '2.5'
