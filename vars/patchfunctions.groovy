@@ -183,7 +183,7 @@ def buildModule(module,buildVersion) {
     dir ("${module.name}") {
         commonPatchFunctions.log("Building Module : " + module.name + " for Version: " + buildVersion,"buildModule")
         // TODO JHE (08.10.2020): should we deploy to Artifactory -> IT-36781
-        def mvnCommand = "mvn -DbomVersion=${buildVersion} ${env.MAVEN_PROFILE} clean install"
+        def mvnCommand = "mvn -DbomVersion=${buildVersion} ${env.MAVEN_PROFILE} clean deploy"
         commonPatchFunctions.log("${mvnCommand}","buildModule")
         lock ("BomUpdate${buildVersion}") {
             withMaven( maven: 'Default') { sh "${mvnCommand}" }
