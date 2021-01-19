@@ -171,6 +171,7 @@ def updateBom(service,target,module,mavenVersionNumber) {
         service.serviceMetaData.packages.each{pack ->
             commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
             dir(pack.packagerName) {
+                sh "chmod +x ./gradlew"
                 def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} ${env.GRADLE_OPTS} --info --stacktrace"
                 def result = sh ( returnStdout : true, script: cmd).trim()
                 println "result of ${cmd} : ${result}"
