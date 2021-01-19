@@ -16,7 +16,7 @@ def readJsonFile(def jsonAsText) {
 
 // JHE (06.10.2020): This might/could be centralized somewhere else
 def getRevisionFor(service,target) {
-
+    println "Getting revision for ${service} and ${target}"
     def jsonFilePath = "${env.REVISIONS_FILES_PATH}/Revisions.json"
     def jsonFile = new File(jsonFilePath)
     if(!jsonFile.exists()) {
@@ -24,6 +24,7 @@ def getRevisionFor(service,target) {
         return ""
     }
     def json = readJsonFile(jsonFile.text)
+    println "Read json from ${jsonFilePath} : ${json}"
     if(json.services."${service.serviceName}" == null || json.services."${service.serviceName}"."${target}" == null) {
         println "No revision ever published for ${service.serviceName} on ${target}, returning empty String"
         return ""
