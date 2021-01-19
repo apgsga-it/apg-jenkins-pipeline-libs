@@ -245,7 +245,7 @@ def publishNewRevisionFor(service,patchNumber,target) {
             commonPatchFunctions.log("Switching into following folder : ${pack.packagerName}","publishNewRevisionFor")
             commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
             dir(pack.packagerName) {
-                sh "chmod +x -./gradlew"
+                sh "chmod +x ./gradlew"
                 def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH ${env.GRADLE_OPTS} --stacktrace --info"
                 commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
                 def result = sh(returnStdout: true, script: cmd).trim()
