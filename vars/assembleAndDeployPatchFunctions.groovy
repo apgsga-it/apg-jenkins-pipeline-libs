@@ -52,7 +52,7 @@ def doAssembleAndDeploy(parameter) {
     parameter.packagers.each{packager ->
         commonPatchFunctions.log("Assembling ${packager.name} started.","doAssembleAndDeploy")
         dir(packager.name) {
-            def cmd = "./gradlew clean buildPkg deployPkg -PtargetHost=${packager.targetHost} -PinstallTarget=${parameter.target} -PbuildTyp=CLONED -PbaseVersion=${packager.baseVersion} -PcloneTargetPath=${env.WORKSPACE}/clonedInformation ${env.GRADLE_OPTS} --info --stacktrace"
+            def cmd = "./gradlew clean buildPkg deployPkg -PtargetHost=${packager.targetHost} -PinstallTarget=${parameter.target} -PbuildTyp=CLONED  -PcloneTargetPath=${env.WORKSPACE}/clonedInformation ${env.GRADLE_OPTS} --info --stacktrace"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
