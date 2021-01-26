@@ -10,7 +10,6 @@ def patchBuildsConcurrent(jsonParam) {
                             lock("${service.serviceName}-${jsonParam.target}-Build") {
                                 commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                                 deleteDir()
-                                //checkoutPackager(service)
                                 publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target)
                                 buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(service, jsonParam))
                             }
@@ -122,11 +121,6 @@ def getCoPatchDbFolderName(jsonParam) {
     return "${jsonParam.dbPatchBranch}_${jsonParam.target}"
 }
 
-def checkoutPackager(service) {
-    service.serviceMetaData.packages.each{pack ->
-        commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
-    }
-}
 
 def buildAndReleaseModulesConcurrent(service,target,tag) {
         def artefacts = service.artifactsToPatch
@@ -167,15 +161,12 @@ def updateBom(service,target,module,mavenVersionNumber) {
     lock ("BomUpdate${mavenVersionNumber}") {
 
         commonPatchFunctions.log("updateBom for service : ${service} / on target ${target}")
-
-        service.serviceMetaData.packages.each{pack ->
-            commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
-            dir(pack.packagerName) {
-                sh "chmod +x ./gradlew"
-                def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} ${env.GRADLE_OPTS} --info --stacktrace"
-                def result = sh ( returnStdout : true, script: cmd).trim()
-                println "result of ${cmd} : ${result}"
-            }
+        commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,service.serviceMetaData.revisionPkgName)
+        dir(service.serviceMetaData.revisionPkgName) {
+            sh "chmod +x ./gradlew"
+            def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} ${env.GRADLE_OPTS} --info --stacktrace"
+            def result = sh ( returnStdout : true, script: cmd).trim()
+            println "result of ${cmd} : ${result}"
         }
     }
 }
@@ -242,16 +233,14 @@ def publishNewRevisionFor(service,patchNumber,target) {
     commonPatchFunctions.log("publishing new revision for service ${service} for patchNumber=${patchNumber} on target=${target}","publishNewRevisionFor")
     //TODO JHE (07.01.2021): Depending on the implementation of IT-36715, we might be able to remove this lock
     lock("revisionFileOperation") {
-        service.serviceMetaData.packages.each{pack ->
-            commonPatchFunctions.log("Switching into following folder : ${pack.packagerName}","publishNewRevisionFor")
-            commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,pack.packagerName)
-            dir(pack.packagerName) {
-                sh "chmod +x ./gradlew"
-                def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH ${env.GRADLE_OPTS} --stacktrace --info"
-                commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
-                def result = sh(returnStdout: true, script: cmd).trim()
-                println "result of ${cmd} : ${result}"
-            }
+        commonPatchFunctions.log("Switching into following folder : ${service.serviceMetaData.revisionPkgName}","publishNewRevisionFor")
+        commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch, service.serviceMetaData.revisionPkgName)
+        dir(service.serviceMetaData.revisionPkgName) {
+            sh "chmod +x ./gradlew"
+            def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH ${env.GRADLE_OPTS} --stacktrace --info"
+            commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
+            def result = sh(returnStdout: true, script: cmd).trim()
+            println "result of ${cmd} : ${result}"
         }
     }
 }
