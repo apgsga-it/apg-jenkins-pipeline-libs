@@ -17,6 +17,16 @@ def patchBuildsConcurrent(jsonParam) {
                             }
                     )
                 }
+
+                lock("mergeRevisionInformation") {
+                    jsonParam.services.each { service ->
+                        (
+                                mergeRevisionToMainJson(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
+                        )
+                    }
+                }
+
+
                 commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","done")
             }
     }
@@ -228,6 +238,18 @@ def tagName(service,jsonParam) {
         service.patchTag
     } else {
         jsonParam.developerBranch
+    }
+}
+
+def mergeRevisionToMainJson(service,patchNumber,target,revisionRootPath) {
+    commonPatchFunctions.log("Merging revision number for ${service.serviceName} and patch ${patchNumber}","mergeRevisionToMainJson")
+    commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch, service.serviceMetaData.revisionPkgName)
+    dir(service.serviceMetaData.revisionPkgName) {
+        sh "chmod +x ./gradlew"
+        def cmd = "./gradlew clean mergeRevision -PrevisionRootPath=${revisionRootPath} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json ${env.GRADLE_OPTS} --stacktrace --info"
+        commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
+        def result = sh(returnStdout: true, script: cmd).trim()
+        println "result of ${cmd} : ${result}"
     }
 }
 
