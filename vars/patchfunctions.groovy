@@ -151,7 +151,7 @@ def buildAndReleaseModulesConcurrent(tag, module, target, service,revisionRootPa
 }
 
 def buildAndReleaseModule(module,service,target,revisionRootPath) {
-    def revision = commonPatchFunctions.getRevisionFor(service,target)
+    def revision = commonPatchFunctions.getRevisionFor(service,target,revisionRootPath)
     def mavenVersionNumber = mavenVersionNumber(service,revision)
     commonPatchFunctions.log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
     releaseModule(module,revision,service.serviceMetaData.revisionMnemoPart, mavenVersionNumber)
