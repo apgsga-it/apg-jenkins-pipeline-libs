@@ -3,7 +3,7 @@
 def patchBuildsConcurrent(jsonParam) {
     node {
             if(javaBuildRequired(jsonParam)) {
-                def revisionRootPath = pwd()
+                def revisionClonedPath = pwd()
                 commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","started")
                 // TODO JHE (05.10.2020): We could build service in parallel, but not a priority for the first release
                 jsonParam.services.each { service ->
@@ -11,8 +11,8 @@ def patchBuildsConcurrent(jsonParam) {
                             lock("${service.serviceName}-${jsonParam.target}-Build") {
                                 commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                                 deleteDir()
-                                publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionRootPath)
-                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(service, jsonParam), revisionRootPath)
+                                publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
+                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(service, jsonParam), revisionClonedPath)
                             }
                     )
                 }
@@ -236,7 +236,7 @@ def publishNewRevisionFor(service,patchNumber,target,revisionRootPath) {
     commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch, service.serviceMetaData.revisionPkgName)
     dir(service.serviceMetaData.revisionPkgName) {
         sh "chmod +x ./gradlew"
-        def cmd = "./gradlew clean publish -PrevisionRootPath=${revisionRootPath} -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH ${env.GRADLE_OPTS} --stacktrace --info"
+        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=CLONED -PcloneTargetPath=${revisionRootPath} ${env.GRADLE_OPTS} --stacktrace --info"
         commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
         def result = sh(returnStdout: true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
