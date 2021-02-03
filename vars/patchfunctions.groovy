@@ -3,6 +3,7 @@
 def patchBuildsConcurrent(jsonParam) {
     node {
             if(javaBuildRequired(jsonParam)) {
+                def revisionRootPath = pwd()
                 commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","started")
                 // TODO JHE (05.10.2020): We could build service in parallel, but not a priority for the first release
                 jsonParam.services.each { service ->
@@ -10,8 +11,8 @@ def patchBuildsConcurrent(jsonParam) {
                             lock("${service.serviceName}-${jsonParam.target}-Build") {
                                 commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                                 deleteDir()
-                                publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target)
-                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(service, jsonParam))
+                                publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionRootPath)
+                                buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(service, jsonParam), revisionRootPath)
                             }
                     )
                 }
@@ -122,7 +123,7 @@ def getCoPatchDbFolderName(jsonParam) {
 }
 
 
-def buildAndReleaseModulesConcurrent(service,target,tag) {
+def buildAndReleaseModulesConcurrent(service,target,tag,revisionRootPath) {
         def artefacts = service.artifactsToPatch
         def listsByDepLevel = artefacts.groupBy { it.dependencyLevel }
         def depLevels = listsByDepLevel.keySet() as List
@@ -133,38 +134,38 @@ def buildAndReleaseModulesConcurrent(service,target,tag) {
             def artifactsToBuildParallel = listsByDepLevel[depLevel]
             commonPatchFunctions.log(artifactsToBuildParallel, "buildAndReleaseModulesConcurrent")
             def parallelBuilds = artifactsToBuildParallel.collectEntries {
-                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, target, service)]
+                ["Building Level: ${it.dependencyLevel} and Module: ${it.name}": buildAndReleaseModulesConcurrent(tag, it, target, service, revisionRootPath)]
             }
             parallel parallelBuilds
         }
 }
 
-def buildAndReleaseModulesConcurrent(tag, module, target, service) {
+def buildAndReleaseModulesConcurrent(tag, module, target, service,revisionRootPath) {
     return {
         node {
             coFromTagCvsConcurrent(tag,module.name)
-            buildAndReleaseModule(module,service,target)
+            buildAndReleaseModule(module,service,target,revisionRootPath)
         }
     }
 }
 
-def buildAndReleaseModule(module,service,target) {
+def buildAndReleaseModule(module,service,target,revisionRootPath) {
     def revision = commonPatchFunctions.getRevisionFor(service,target)
     def mavenVersionNumber = mavenVersionNumber(service,revision)
     commonPatchFunctions.log("buildAndReleaseModule : " + module.name,"buildAndReleaseModule")
     releaseModule(module,revision,service.serviceMetaData.revisionMnemoPart, mavenVersionNumber)
     buildModule(module,mavenVersionNumber)
-    updateBom(service,target,module,mavenVersionNumber)
+    updateBom(service,target,module,mavenVersionNumber,revisionRootPath)
 }
 
-def updateBom(service,target,module,mavenVersionNumber) {
+def updateBom(service,target,module,mavenVersionNumber,revisionRootPath) {
     lock ("BomUpdate${mavenVersionNumber}") {
 
         commonPatchFunctions.log("updateBom for service : ${service} / on target ${target}")
         commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch,service.serviceMetaData.revisionPkgName)
         dir(service.serviceMetaData.revisionPkgName) {
             sh "chmod +x ./gradlew"
-            def cmd = "./gradlew publish -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} ${env.GRADLE_OPTS} --info --stacktrace"
+            def cmd = "./gradlew publish -PrevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} ${env.GRADLE_OPTS} --info --stacktrace"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
@@ -229,19 +230,16 @@ def tagName(service,jsonParam) {
     }
 }
 
-def publishNewRevisionFor(service,patchNumber,target) {
+def publishNewRevisionFor(service,patchNumber,target,revisionRootPath) {
     commonPatchFunctions.log("publishing new revision for service ${service} for patchNumber=${patchNumber} on target=${target}","publishNewRevisionFor")
-    //TODO JHE (07.01.2021): Depending on the implementation of IT-36715, we might be able to remove this lock
-    lock("revisionFileOperation") {
-        commonPatchFunctions.log("Switching into following folder : ${service.serviceMetaData.revisionPkgName}","publishNewRevisionFor")
-        commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch, service.serviceMetaData.revisionPkgName)
-        dir(service.serviceMetaData.revisionPkgName) {
-            sh "chmod +x ./gradlew"
-            def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH ${env.GRADLE_OPTS} --stacktrace --info"
-            commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
-            def result = sh(returnStdout: true, script: cmd).trim()
-            println "result of ${cmd} : ${result}"
-        }
+    commonPatchFunctions.log("Switching into following folder : ${service.serviceMetaData.revisionPkgName}","publishNewRevisionFor")
+    commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch, service.serviceMetaData.revisionPkgName)
+    dir(service.serviceMetaData.revisionPkgName) {
+        sh "chmod +x ./gradlew"
+        def cmd = "./gradlew clean publish -PrevisionRootPath=${revisionRootPath} -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PbuildType=PATCH ${env.GRADLE_OPTS} --stacktrace --info"
+        commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
+        def result = sh(returnStdout: true, script: cmd).trim()
+        println "result of ${cmd} : ${result}"
     }
 }
 
