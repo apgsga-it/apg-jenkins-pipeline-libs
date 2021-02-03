@@ -236,7 +236,7 @@ def publishNewRevisionFor(service,patchNumber,target,revisionRootPath) {
     commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch, service.serviceMetaData.revisionPkgName)
     dir(service.serviceMetaData.revisionPkgName) {
         sh "chmod +x ./gradlew"
-        def cmd = "./gradlew clean publish -PnewRevision -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json -PrevisionRootPath=${revisionRootPath} -PbuildType=CLONED -PcloneTargetPath=${revisionRootPath} ${env.GRADLE_OPTS} --stacktrace --info"
+        def cmd = "./gradlew clean publish -PnewRevision -PrevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json ${env.GRADLE_OPTS} --stacktrace --info"
         commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
         def result = sh(returnStdout: true, script: cmd).trim()
         println "result of ${cmd} : ${result}"
