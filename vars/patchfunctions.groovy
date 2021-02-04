@@ -31,15 +31,9 @@ def patchBuildsConcurrent(jsonParam) {
                     }
                 }
 
-                // TODO JHE : delete folder here
-
-                /*
                 fileOperations([
-                        folderCreateOperation(folderPath: revisionClonedPath)
+                        folderDeleteOperation(folderPath: revisionClonedPath)
                 ])
-
-                 */
-
 
                 commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","done")
             }
