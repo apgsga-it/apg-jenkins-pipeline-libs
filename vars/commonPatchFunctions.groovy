@@ -14,7 +14,6 @@ def readJsonFile(def jsonAsText) {
     json
 }
 
-/*
 def copyRevisionFilesTo(targetDir) {
     dir(env.REVISIONS_FILES_PATH) {
         fileOperations([
@@ -22,8 +21,6 @@ def copyRevisionFilesTo(targetDir) {
         ])
     }
 }
-
- */
 
 // JHE (06.10.2020): This might/could be centralized somewhere else
 def getRevisionFor(service,target,revisionDirPath) {
