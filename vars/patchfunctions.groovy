@@ -1,13 +1,8 @@
 #!groovy
 
-def patchBuildsConcurrent(jsonParam) {
+def patchBuildsConcurrent(jsonParam,revisionClonedPath) {
     node {
             if(javaBuildRequired(jsonParam)) {
-                def revisionClonedPath = "/var/jenkins/gradle/home/patch${jsonParam.patchNumber}_${jsonParam.target}"
-
-                fileOperations([
-                        folderCreateOperation(folderPath: revisionClonedPath)
-                ])
 
                 commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","started")
                 // TODO JHE (05.10.2020): We could build service in parallel, but not a priority for the first release
@@ -30,10 +25,6 @@ def patchBuildsConcurrent(jsonParam) {
                         )
                     }
                 }
-
-                fileOperations([
-                        folderDeleteOperation(folderPath: revisionClonedPath)
-                ])
 
                 commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","done")
             }

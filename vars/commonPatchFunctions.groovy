@@ -123,3 +123,15 @@ def benchmark() {
     }
     benchmarkCallback
 }
+
+def createFolder(folderPath) {
+    fileOperations([
+            folderCreateOperation(folderPath: folderPath)
+    ])
+}
+
+def deleteFolder(folderPath) {
+    fileOperations([
+            folderDeleteOperation(folderPath: folderPath)
+    ])
+}
