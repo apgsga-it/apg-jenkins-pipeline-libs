@@ -14,10 +14,18 @@ def readJsonFile(def jsonAsText) {
     json
 }
 
+def copyRevisionFilesTo(targetDir) {
+    dir(env.REVISIONS_FILES_PATH) {
+        fileOperations([
+                fileCopyOperation(includes: "Revisions.json", targetLocation: targetDir)
+        ])
+    }
+}
+
 // JHE (06.10.2020): This might/could be centralized somewhere else
-def getRevisionFor(service,target) {
+def getRevisionFor(service,target,revisionDirPath) {
     println "Getting revision for ${service} and ${target}"
-    def jsonFilePath = "${env.REVISIONS_FILES_PATH}/Revisions.json"
+    def jsonFilePath = "${revisionDirPath}/Revisions.json"
     def jsonFile = new File(jsonFilePath)
     if(!jsonFile.exists()) {
         println "${jsonFilePath} does not exist yet, returning empty String"
