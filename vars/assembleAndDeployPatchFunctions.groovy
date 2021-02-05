@@ -57,7 +57,7 @@ def doAssembleAndDeploy(parameter,revisionClonedPath) {
         commonPatchFunctions.log("Assembling ${packager.name} started.","doAssembleAndDeploy")
         dir(packager.name) {
             sh "chmod +x ./gradlew"
-            def cmd = "./gradlew clean buildPkg deployPkg -PrevisionRootPath=${revisionClonedPath} -PtargetHost=${packager.targetHost} -PinstallTarget=${parameter.target} ${env.GRADLE_OPTS} --info --stacktrace"
+            def cmd = "./gradlew clean buildPkg deployPkg -Papg.common.repo.gradle.local.repo.from.maven=false -PrevisionRootPath=${revisionClonedPath} -PtargetHost=${packager.targetHost} -PinstallTarget=${parameter.target} ${env.GRADLE_OPTS} --info --stacktrace"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
