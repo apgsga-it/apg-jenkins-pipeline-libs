@@ -71,8 +71,7 @@ def getStatusCodeFor(patchConfig,target,toStage) {
 def notifyDb(patchNumber,stage,successNotification,errorNotification) {
     node {
         println "Notifying DB for ${patchNumber} for stage ${stage} with successNotification=${successNotification} and errorNotification=${errorNotification}"
-        // TODO JHE (06.11.2020) : -purl=localhost:9010 shouldn't be hardcoded -> IT-36778
-        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -notifydb ${patchNumber},${stage},${successNotification},${errorNotification}"
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -notifydb ${patchNumber},${stage},${successNotification},${errorNotification}"
         sh "${cmd}"
         println "DONE - ${cmd}"
     }
@@ -80,8 +79,7 @@ def notifyDb(patchNumber,stage,successNotification,errorNotification) {
 
 def logPatchActivity(def patchNumber, def target, def step, def logText) {
     node {
-        // TODO JHE (06.11.2020) : -purl=localhost:9010 shouldn't be hardcoded -> IT-36778
-        def cmd = "/opt/apg-patch-cli/bin/apscli.sh -purl localhost:9010 -log ${patchNumber},${target},${step},${logText}"
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -log ${patchNumber},${target},${step},${logText}"
         println "Executeing ${cmd}"
         sh "${cmd}"
         println "Executeing ${cmd} done."
