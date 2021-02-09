@@ -256,12 +256,14 @@ def publishNewRevisionFor(service,patchNumber,target,revisionRootPath) {
     commonPatchFunctions.log("publishing new revision for service ${service} for patchNumber=${patchNumber} on target=${target}","publishNewRevisionFor")
     commonPatchFunctions.log("Switching into following folder : ${service.serviceMetaData.revisionPkgName}","publishNewRevisionFor")
     commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch, service.serviceMetaData.revisionPkgName)
-    dir(service.serviceMetaData.revisionPkgName) {
-        sh "chmod +x ./gradlew"
-        def cmd = "./gradlew clean publish -PnewRevision -PpatchRevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json ${env.GRADLE_OPTS} --stacktrace --info"
-        commonPatchFunctions.log("Following will be executed : ${cmd}","publishNewRevisionFor")
-        def result = sh(returnStdout: true, script: cmd).trim()
-        println "result of ${cmd} : ${result}"
+    lock("publishNewRevision") {
+        dir(service.serviceMetaData.revisionPkgName) {
+            sh "chmod +x ./gradlew"
+            def cmd = "./gradlew clean publish -PnewRevision -PpatchRevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json ${env.GRADLE_OPTS} --stacktrace --info"
+            commonPatchFunctions.log("Following will be executed : ${cmd}", "publishNewRevisionFor")
+            def result = sh(returnStdout: true, script: cmd).trim()
+            println "result of ${cmd} : ${result}"
+        }
     }
 }
 
