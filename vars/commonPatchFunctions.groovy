@@ -22,10 +22,6 @@ def copyRevisionFilesTo(targetDir) {
     }
 }
 
-def resetRevisionFor(source,target) {
-    log("Resetting revision for ${target} with latest of ${src}", "resetRevisionFor")
-}
-
 // JHE (06.10.2020): This might/could be centralized somewhere else
 def getRevisionFor(service,target,revisionDirPath) {
     println "Getting revision for ${service} and ${target}"
