@@ -3,10 +3,10 @@
 import groovy.json.JsonSlurperClassic
 
 def readPatchJsonFileFromStash(def stashName) {
-    node {
+ //   node {
             unstash stashName
             return readJsonFile(new File("${env.WORKSPACE}/PatchFile.json").text)
-        }
+   //     }
 }
 
 def readJsonFile(def jsonAsText) {
@@ -69,21 +69,21 @@ def getStatusCodeFor(patchConfig,target,toStage) {
 }
 
 def notifyDb(patchNumber,stage,successNotification,errorNotification) {
-    node {
+  //  node {
         println "Notifying DB for ${patchNumber} for stage ${stage} with successNotification=${successNotification} and errorNotification=${errorNotification}"
         def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -notifydb ${patchNumber},${stage},${successNotification},${errorNotification}"
         sh "${cmd}"
         println "DONE - ${cmd}"
-    }
+   // }
 }
 
 def logPatchActivity(def patchNumber, def target, def step, def logText) {
-    node {
+ //   node {
         def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -log ${patchNumber},${target},${step},${logText}"
         println "Executeing ${cmd}"
         sh "${cmd}"
         println "Executeing ${cmd} done."
-    }
+   // }
 }
 
 // Used in order to have Datetime info in our pipelines

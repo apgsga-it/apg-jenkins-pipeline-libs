@@ -1,7 +1,7 @@
 #!groovy
 
 def patchBuildsConcurrent(jsonParam,revisionClonedPath) {
-    node {
+ //   node {
             if(javaBuildRequired(jsonParam)) {
 
                 commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","started")
@@ -28,7 +28,7 @@ def patchBuildsConcurrent(jsonParam,revisionClonedPath) {
 
                 commonPatchFunctions.logPatchActivity(jsonParam.patchNumber,jsonParam.target,"build","done")
             }
-    }
+   // }
 }
 
 def javaBuildRequired(jsonParam) {
@@ -152,11 +152,11 @@ def buildAndReleaseModulesConcurrent(service,target,tag,revisionRootPath) {
 
 def buildAndReleaseModulesConcurrent(tag, module, target, service,revisionRootPath) {
     return {
-        node {
+    //    node {
             coFromTagCvsConcurrent(tag,module.name)
             buildAndReleaseModule(module,service,target,revisionRootPath)
         }
-    }
+  //  }
 }
 
 def buildAndReleaseModule(module,service,target,revisionRootPath) {
