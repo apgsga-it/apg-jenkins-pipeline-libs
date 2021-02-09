@@ -1,24 +1,17 @@
 #!groovy
 
-import groovy.json.JsonSlurperClassic
-
 def resetRevisionFor(params) {
     deleteDir()
-    commonPatchFunctions.coFromBranchCvs("HEAD","cm-resetRevision")
-
-    println "params = ${params}"
-
-    params.patches.each{ p ->
-        p.services.each { s ->
-            println "Here we should call the gradle project with : -PserviceName=${s.serviceName} / -Psrc=${params.src} / -Ptarget=${params.target}"
-        }
-    }
-
+    //TODO JHE (09.02.2020) : HEAD should be taken from Jenkins env variable
+    commonPatchFunctions.coFromBranchCvs("HEAD", "cm-resetRevision")
     dir("cm-resetRevision") {
         sh "chmod +x ./gradlew"
-        def cmd = "./gradlew resetRevision -PserviceName=echoservice -Psrc=chei211 -Ptarget=CHEI212 ${env.GRADLE_OPTS} --info --stacktrace"
-        def result = sh ( returnStdout : true, script: cmd).trim()
-        println "result of ${cmd} : ${result}"
+        params.patches.each { p ->
+            p.services.each { s ->
+                def cmd = "./gradlew resetRevision -PserviceName=${s.serviceName} -Psrc=${params.src} -Ptarget=${params.target} ${env.GRADLE_OPTS} --info --stacktrace"
+                def result = sh(returnStdout: true, script: cmd).trim()
+                println "result of ${cmd} : ${result}"
+            }
+        }
     }
-
 }
