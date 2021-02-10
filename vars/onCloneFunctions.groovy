@@ -1,6 +1,7 @@
 #!groovy
 
 def resetRevisionFor(params) {
+    deleteDir()
     getResetRevisionGradleFile()
     params.buildParameters.each { bp ->
         bp.services.each { s ->
@@ -18,6 +19,6 @@ def getResetRevisionGradleFile() {
     def result = sh(returnStdout: true, script: cmd).trim()
     println "result of ${cmd} : ${result}"
     def renameCmd = "cp apg-jenkins-pipeline-libs/resources/build.gradle.resetRevision build.gradle"
-    def renameCmdResult = sh(returnStdout: true, script: cmd).trim()
+    def renameCmdResult = sh(returnStdout: true, script: renameCmd).trim()
     println "result of ${renameCmd} : ${renameCmdResult}"
 }
