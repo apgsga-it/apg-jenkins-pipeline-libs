@@ -18,7 +18,7 @@ def getResetRevisionGradleFile() {
     def cmd = "git clone -b ${env.GITHUB_JENKINS_VERSION} https://github.com/apgsga-it/apg-jenkins-pipeline-libs.git"
     def result = sh(returnStdout: true, script: cmd).trim()
     println "result of ${cmd} : ${result}"
-    def renameCmd = "mv resources/build.gradle.resetRevision build.gradle"
+    def renameCmd = "cp apg-jenkins-pipeline-libs/resources/build.gradle.resetRevision build.gradle"
     def renameCmdResult = sh(returnStdout: true, script: cmd).trim()
     println "result of ${renameCmd} : ${renameCmdResult}"
 }
