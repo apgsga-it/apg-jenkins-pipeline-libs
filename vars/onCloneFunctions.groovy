@@ -1,5 +1,4 @@
 #!groovy
-@Library('build.gradle.resetRevision')
 
 def resetRevisionFor(params) {
 
