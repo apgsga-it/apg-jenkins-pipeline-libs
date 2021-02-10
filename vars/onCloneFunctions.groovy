@@ -1,10 +1,8 @@
 #!groovy
 
 def resetRevisionFor(params) {
-
     deleteDir()
-    def buildGradle = libraryResource("build.gradle.resetRevision")
-    writeFile(file: "build.gradle", text: buildGradle)
+    getResetRevisionGradleFile()
     params.buildParameters.each { bp ->
         bp.services.each { s ->
             def cmd = "gradle resetRevision -PserviceName=${s.serviceName} -Psrc=${params.src} -Ptarget=${params.target} ${env.GRADLE_OPTS} --info --stacktrace"
@@ -12,20 +10,11 @@ def resetRevisionFor(params) {
             println "result of ${cmd} : ${result}"
         }
     }
+}
 
-    /*
-    deleteDir()
-    commonPatchFunctions.coFromBranchCvs(env.CM_RESET_REV_PROJECT_CVS_BRANCH, "cm-resetRevision")
-    dir("cm-resetRevision") {
-        sh "chmod +x ./gradlew"
-        params.buildParameters.each { bp ->
-            bp.services.each { s ->
-                def cmd = "./gradlew resetRevision -PserviceName=${s.serviceName} -Psrc=${params.src} -Ptarget=${params.target} ${env.GRADLE_OPTS} --info --stacktrace"
-                def result = sh(returnStdout: true, script: cmd).trim()
-                println "result of ${cmd} : ${result}"
-            }
-        }
-    }
-
-     */
+def getResetRevisionGradleFile() {
+    // JHE (10.02.2021) : No idea why libraryResource function doesn't work. As a workaround, we're getting the resource using wget
+    def cmd = "wget https://github.com/apgsga-it/apg-jenkins-pipeline-libs/tree/${env.GITHUB_JENKINS_VERSION}/resources/build.gradle.resetRevision -o build.gradle"
+    def result = sh(returnStdout: true, script: cmd).trim()
+    println "result of ${cmd} : ${result}"
 }
