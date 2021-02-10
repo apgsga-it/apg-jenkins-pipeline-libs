@@ -1,0 +1,31 @@
+import com.apgsga.revision.manager.domain.RevisionManager
+import com.apgsga.revision.manager.domain.RevisionManagerBuilder
+
+buildscript {
+   repositories {
+       maven {
+           url = "${mavenRepoBaseUrl}/${mavenRepoName}"
+           credentials {
+               username = mavenRepoUser
+               password = mavenRepoPwd
+           }
+       }
+   }
+
+   dependencies {
+       classpath 'com.apgsga.gradle:revision-manager:2.21-SNAPSHOT'
+   }
+}
+
+tasks.register('resetRevision') {
+   doLast {
+       def serviceName = project.property("serviceName")
+       def src = project.property("src")
+       def target = project.property("target")
+       project.logger.info("Resetting revision service ${serviceName} of target ${target} with last revision of ${src}")
+       RevisionManager rev = RevisionManagerBuilder.create().revisionRootPath("/var/jenkins/gradle/home/").build();
+       def lastRev = rev.lastRevision(serviceName ,src)
+       println "Last revision of ${src} was ${lastRev} -> this will now be the last one of ${target}"
+       rev.resetLastRevision(serviceName, target, lastRev)
+   }
+}
