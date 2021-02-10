@@ -5,8 +5,7 @@ def resetRevisionFor(params) {
     getResetRevisionGradleFile()
     params.buildParameters.each { bp ->
         bp.services.each { s ->
-            //def cmd = "gradle resetRevision -PserviceName=${s.serviceName} -Psrc=${params.src} -Ptarget=${params.target} ${env.GRADLE_OPTS} --info --stacktrace"
-            def cmd = "which gradle"
+            def cmd = "/opt/gradle/bin/gradle resetRevision -PserviceName=${s.serviceName} -Psrc=${params.src} -Ptarget=${params.target} ${env.GRADLE_OPTS} --info --stacktrace"
             def result = sh(returnStdout: true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
