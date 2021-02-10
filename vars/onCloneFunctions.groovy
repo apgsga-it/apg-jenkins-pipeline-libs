@@ -1,7 +1,6 @@
 #!groovy
 
 def resetRevisionFor(params) {
-    deleteDir()
     getResetRevisionGradleFile()
     params.buildParameters.each { bp ->
         bp.services.each { s ->
