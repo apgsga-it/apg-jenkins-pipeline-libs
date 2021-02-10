@@ -2,8 +2,7 @@
 
 def resetRevisionFor(params) {
     deleteDir()
-    //TODO JHE (09.02.2020) : HEAD should be taken from Jenkins env variable
-    commonPatchFunctions.coFromBranchCvs("HEAD", "cm-resetRevision")
+    commonPatchFunctions.coFromBranchCvs(env.CM_RESET_REV_PROJECT_CVS_BRANCH, "cm-resetRevision")
     dir("cm-resetRevision") {
         sh "chmod +x ./gradlew"
         params.buildParameters.each { bp ->
