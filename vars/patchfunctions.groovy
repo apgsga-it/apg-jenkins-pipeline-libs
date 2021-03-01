@@ -111,7 +111,7 @@ def coDbModules(jsonParam) {
     ])
 
     def patchNumber = jsonParam.patchNumber
-    def dbPatchTag = jsonParam.dbPatch.patchTag
+    def dbPatchTag = jsonParam.dbPatchTag
 
     commonPatchFunctions.log("DB Objects for patch \"${patchNumber}\" being checked out to \"${patchDbFolderName}/oracle\"", "coDbModule")
     jsonParam.dbObjects.collect { it.moduleName }.unique().each { dbModule ->
