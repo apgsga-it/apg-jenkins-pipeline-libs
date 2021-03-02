@@ -16,28 +16,48 @@ def assembleAndDeployJavaService(parameter) {
 
 def assembleAndDeployDb(parameter) {
     if(parameter.dbZipNames.size() > 0) {
-        int i=1
-        commonPatchFunctions.log("Possible ZIP(s) are : ${parameter.dbZipNames}","assembleAndDeployDb")
-        parameter.patchNumbers.each { patchNumber ->
-            commonPatchFunctions.log("Searching ZIP for Patch ${patchNumber}","assembleAndDeployDb")
-            parameter.dbZipNames.each { dbZipName ->
-                if(dbZipName.contains(patchNumber)) {
-                    commonPatchFunctions.log("Content of ${env.DBZIPS_FILE_PATH}/${dbZipName} zip will be use for final assembled ZIP.","assembleAndDeployDb")
-                    unzip zipFile:"${env.DBZIPS_FILE_PATH}/${dbZipName}"
-                    fileOperations([
-                            folderRenameOperation(source: "oracle", destination: "oracle_${String.format('%04d',i)}")
-                    ])
-                }
-            }
-            i++
-        }
-
-        fileOperations ([
-                fileCreateOperation(fileName: "patch_list", fileContent: parameter.patchNumbers.join(","))
-        ])
+        extractDbZips(parameter)
+        createPatchList(parameter)
+        prepareAssembledZip(parameter)
     }
     else {
         commonPatchFunctions.log("No DB-Zip(s) to be deployed","assembleAndDeployDb")
+    }
+}
+
+def prepareAssembledZip(parameter) {
+    def dbZipFileName = "dbPatches${parameter.target}"
+    commonPatchFunctions.log("Creating ZIP file called ","prepareAssembledZip")
+    fileOperations ([
+            folderCreateOperation(folderPath: dbZipFileName),
+            fileCopyOperation(includes: "oracle*/**", targetLocation: dbZipFileName),
+            fileCopyOperation(includes: "patch_list", targetLocation: dbZipFileName)
+    ])
+}
+
+def createPatchList(parameter) {
+    def fileContent = parameter.patchNumbers.join(",")
+    commonPatchFunctions.log("Creating patch_list file with following content : ${fileContent}","createPatchList")
+    fileOperations ([
+            fileCreateOperation(fileName: "patch_list", fileContent: fileContent)
+    ])
+}
+
+def extractDbZips(parameter) {
+    int i=1
+    commonPatchFunctions.log("Possible ZIP(s) are : ${parameter.dbZipNames}","extractDbZips")
+    parameter.patchNumbers.each { patchNumber ->
+        commonPatchFunctions.log("Searching ZIP for Patch ${patchNumber}","extractDbZips")
+        parameter.dbZipNames.each { dbZipName ->
+            if(dbZipName.contains(patchNumber)) {
+                commonPatchFunctions.log("Content of ${env.DBZIPS_FILE_PATH}/${dbZipName} zip will be use for final assembled ZIP.","extractDbZips")
+                unzip zipFile:"${env.DBZIPS_FILE_PATH}/${dbZipName}"
+                fileOperations([
+                        folderRenameOperation(source: "oracle", destination: "oracle_${String.format('%04d',i)}")
+                ])
+            }
+        }
+        i++
     }
 }
 
