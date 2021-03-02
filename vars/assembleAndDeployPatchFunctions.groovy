@@ -31,7 +31,8 @@ def prepareAssembledZip(parameter) {
     fileOperations ([
             folderCreateOperation(folderPath: dbZipFileName),
             fileCopyOperation(includes: "oracle*/**", targetLocation: dbZipFileName),
-            fileCopyOperation(includes: "patch_list", targetLocation: dbZipFileName)
+            fileCopyOperation(includes: "patch_list", targetLocation: dbZipFileName),
+            fileZipOperation(folderPath: dbZipFileName)
     ])
 }
 
