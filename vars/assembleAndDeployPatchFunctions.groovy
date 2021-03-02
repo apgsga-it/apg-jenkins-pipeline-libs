@@ -16,13 +16,16 @@ def assembleAndDeployJavaService(parameter) {
 
 def assembleAndDeployDb(parameter) {
     if(parameter.dbZipNames.size() > 0) {
-        parameter.dbZipNames.each{dbZipName ->
-            // TODO JHE (18.12.2020) : IT-36396 -> to be verified with UGE on 13.01.2021 where we should deploy. Jenkins node? Probably it sas to be a Windows machine
-            put("192.168.159.128","${env.DBZIPS_FILE_PATH}/${dbZipName}","/home/apg_install/downloads/dbZips/patch_8001_DEV-CHEI211.zip")
+        int i=0
+        parameter.patchNumbers.each { patchNumber ->
+            def zipName = parameter.dbZipNames.stream().filter{it.contains(patchNumber)}.findFirst().get()
+            commonPatchFunctions.log("Assembling content of ${zipName} zip.","assembleAndDeployDb")
+            unzip zipFile:zipName, dir:"oracle_{i}"
+            i++
         }
     }
     else {
-        commonPatchFunctions.log("No DB-Zip(s) to be deployed","assembleAndDeployJavaService")
+        commonPatchFunctions.log("No DB-Zip(s) to be deployed","assembleAndDeployDb")
     }
 }
 
