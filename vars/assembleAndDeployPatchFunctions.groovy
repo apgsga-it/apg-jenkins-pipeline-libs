@@ -25,7 +25,7 @@ def assembleAndDeployDb(parameter) {
                     commonPatchFunctions.log("Content of ${env.DBZIPS_FILE_PATH}/${dbZipName} zip will be use for final assembled ZIP.","assembleAndDeployDb")
                     unzip zipFile:"${env.DBZIPS_FILE_PATH}/${dbZipName}"
                     fileOperations([
-                            folderRenameOperation(source: "oracle", destinaton: "oracle_${String.format('%04d',i)}")
+                            folderRenameOperation(source: "oracle", destination: "oracle_${String.format('%04d',i)}")
                     ])
                 }
             }
