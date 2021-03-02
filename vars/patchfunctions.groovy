@@ -54,7 +54,7 @@ def buildDbZip(jsonParam) {
     fileOperations([
             fileDeleteOperation(includes: zipName)
     ])
-    zip zipFile: zipName, glob: "${patchDbFolderName}/**"
+    zip zipFile: zipName, dir: "${patchDbFolderName}"
     fileOperations([
             fileCopyOperation(includes: zipName, targetLocation: env.DBZIPS_FILE_PATH)
     ])
