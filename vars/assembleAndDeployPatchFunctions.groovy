@@ -30,7 +30,7 @@ def assembleAndDeployDb(parameter) {
         }
 
         fileOperations ([
-                fileCreateOperation(fileName: "patch_list", fileContent: parameter.patchNumbers)
+                fileCreateOperation(fileName: "patch_list", fileContent: parameter.patchNumbers.join(","))
         ])
     }
     else {
