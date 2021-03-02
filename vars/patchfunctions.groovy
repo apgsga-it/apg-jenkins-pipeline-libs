@@ -62,32 +62,10 @@ def buildDbZip(jsonParam) {
 }
 
 def dbBuild(jsonParam) {
-    def PatchDbFolderName = getCoPatchDbFolderName(jsonParam)
-    fileOperations([
-            folderCreateOperation(folderPath: "${PatchDbFolderName}\\config")
-    ])
-    // Done in order for the config folder to be taken into account when we create the ZIP...
-    fileOperations([
-            fileCreateOperation(fileName: "${PatchDbFolderName}\\config\\dummy.txt", fileContent: "")
-    ])
-    def cmPropertiesContent = "config_name:${PatchDbFolderName}\r\npatch_name:${PatchDbFolderName}\r\ntag_name:${PatchDbFolderName}"
-    fileOperations([
-            fileCreateOperation(fileName: "${PatchDbFolderName}\\cm_properties.txt", fileContent: cmPropertiesContent)
-    ])
-    def configInfoContent = "config_name:${PatchDbFolderName}"
-    fileOperations([
-            fileCreateOperation(fileName: "${PatchDbFolderName}\\config_info.txt", fileContent: configInfoContent)
-    ])
 
-    def installPatchContent = "@echo off\r\n"
-    installPatchContent += "@echo *** Installation von Patch 0900C_${jsonParam.patchNumber} [Build von TODO get YYYY/MM/dd-HH:mm:ss]\r\n"
-    installPatchContent += "set /p v_params=Geben Sie die Zielumgebung ein: \r\n"
-    installPatchContent += "pushd %~dp0 \r\n\r\n"
-    installPatchContent += "cmd /c \\\\cm-linux.apgsga.ch\\cm_ui\\it21_patch.bat %v_params%\r\n"
-    installPatchContent += "popd"
-    fileOperations([
-            fileCreateOperation(fileName: "${PatchDbFolderName}\\install_patch.bat", fileContent: installPatchContent)
-    ])
+    def PatchDbFolderName = getCoPatchDbFolderName(jsonParam)
+
+    // We keep only the "oracle" folder
 
 
 }
