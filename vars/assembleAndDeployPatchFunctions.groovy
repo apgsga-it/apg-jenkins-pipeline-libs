@@ -19,14 +19,27 @@ def assembleAndDeployDb(parameter) {
         extractDbZips(parameter)
         createPatchList(parameter)
         prepareAssembledZip(parameter)
+        deployDbZip(parameter)
     }
     else {
         commonPatchFunctions.log("No DB-Zip(s) to be deployed","assembleAndDeployDb")
     }
 }
 
+def deployDbZip(parameter) {
+    def dbZipFileName = dbPatchZipFileName(parameter)
+    commonPatchFunctions.log("${dbZipFileName} will be deploy using ${parameter.dbZipDeployTarget}","deployDbZip")
+    def deployCmd = "scp -p ${dbZipFileName} svcIT21Install@apg-cmp-p-001.affichage-p.ch:Downloads"
+    def result = sh ( returnStdout : true, script: deployCmd).trim()
+    println "result of ${deployCmd} : ${result}"
+}
+
+def dbPatchZipFileName(parameter) {
+    return "dbPatches${parameter.target}"
+}
+
 def prepareAssembledZip(parameter) {
-    def dbZipFileName = "dbPatches${parameter.target}"
+    def dbZipFileName = dbPatchZipFileName(parameter)
     commonPatchFunctions.log("Creating ZIP file called ","prepareAssembledZip")
     fileOperations ([
             folderCreateOperation(folderPath: dbZipFileName),
