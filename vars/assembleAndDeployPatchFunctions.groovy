@@ -20,9 +20,12 @@ def assembleAndDeployDb(parameter) {
         commonPatchFunctions.log("Possible ZIP(s) are : ${parameter.dbZipNames}","assembleAndDeployDb")
         parameter.patchNumbers.each { patchNumber ->
             commonPatchFunctions.log("Searching ZIP for Patch ${patchNumber}","assembleAndDeployDb")
-            def zipName = parameter.dbZipNames.stream().filter{it.contains(patchNumber)}.findFirst().get()
-            commonPatchFunctions.log("Content of ${zipName} zip will be use for final assembled ZIP.","assembleAndDeployDb")
-            unzip zipFile:zipName, dir:"oracle_${i}"
+            parameter.dbZipNames.each { dbZipName ->
+                if(dbZipName.contains(patchNumber)) {
+                    commonPatchFunctions.log("Content of ${env.DBZIPS_FILE_PATH}/${dbZipName} zip will be use for final assembled ZIP.","assembleAndDeployDb")
+                    unzip zipFile:"${env.DBZIPS_FILE_PATH}/${dbZipName}", dir:"oracle_${i}"
+                }
+            }
             i++
         }
     }
