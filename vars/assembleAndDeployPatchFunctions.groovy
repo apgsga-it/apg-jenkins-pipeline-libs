@@ -28,6 +28,10 @@ def assembleAndDeployDb(parameter) {
             }
             i++
         }
+
+        fileOperations ([
+                fileCreateOperation(fileName: "patch_list", fileContent: parameter.patchNumbers)
+        ])
     }
     else {
         commonPatchFunctions.log("No DB-Zip(s) to be deployed","assembleAndDeployDb")
