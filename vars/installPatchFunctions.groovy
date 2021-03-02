@@ -1,12 +1,15 @@
 #!groovy
 
 def installDb(parameter) {
-    //TODO JHE (18.12.2020) : will be implemented within scope of IT-36396
-    if(1==1) {
-        println "installDB would be done here"
+    if(parameter.installDbPatch) {
+        commonPatchFunctions.log("DB Installation started","installDb")
+        def dbZipFileName = "dbPatches${parameter.target}.zip"
+        def installCmd = "ssh ${parameter.dbZipInstallFrom} \"%CM_WINPROC_ROOT%\\install_patch.bat ${dbZipFileName} ${parameter.target}\""
+        def result = sh ( returnStdout : true, script: installCmd).trim()
+        println "result of ${installCmd} : ${result}"
     }
     else {
-        commonPatchFunctions.log("No DB-Zip(s) to be deployed","assembleAndDeployJavaService")
+        commonPatchFunctions.log("No DB-Zip(s) to be installed","installDb")
     }
 }
 

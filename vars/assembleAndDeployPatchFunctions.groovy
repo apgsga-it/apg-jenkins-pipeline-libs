@@ -29,7 +29,7 @@ def assembleAndDeployDb(parameter) {
 def deployDbZip(parameter) {
     def dbZipFileName = dbPatchContentFolderName(parameter)
     commonPatchFunctions.log("${dbZipFileName} will be deploy using ${parameter.dbZipDeployTarget}","deployDbZip")
-    def deployCmd = "scp -p ${dbZipFileName}.zip svcIT21Install@apg-cmp-p-001.affichage-p.ch:Downloads"
+    def deployCmd = "scp -p ${dbZipFileName}.zip ${parameter.dbZipDeployTarget}:Downloads"
     def result = sh ( returnStdout : true, script: deployCmd).trim()
     println "result of ${deployCmd} : ${result}"
 }
