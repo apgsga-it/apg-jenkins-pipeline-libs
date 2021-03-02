@@ -38,7 +38,6 @@ def patchBuildDbZip(jsonParam) {
             commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "db-build", "started")
             deleteDir()
             coDbModules(jsonParam)
-            dbBuild(jsonParam)
             buildDbZip(jsonParam)
             commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "db-build", "done")
         }
@@ -59,15 +58,6 @@ def buildDbZip(jsonParam) {
     fileOperations([
             fileCopyOperation(includes: zipName, targetLocation: env.DBZIPS_FILE_PATH)
     ])
-}
-
-def dbBuild(jsonParam) {
-
-    def PatchDbFolderName = getCoPatchDbFolderName(jsonParam)
-
-    // We keep only the "oracle" folder
-
-
 }
 
 def coDbModules(jsonParam) {
