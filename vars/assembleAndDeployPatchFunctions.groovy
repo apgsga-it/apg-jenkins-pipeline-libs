@@ -33,7 +33,7 @@ def prepareAssembledZip(parameter) {
             fileCopyOperation(includes: "oracle*/**", targetLocation: dbZipFileName),
             fileCopyOperation(includes: "patch_list", targetLocation: dbZipFileName)
     ])
-    zip zipFile: dbZipFileName, dir: dbZipFileName
+    zip zipFile: "${dbZipFileName}.zip", dir: dbZipFileName
 }
 
 def createPatchList(parameter) {
