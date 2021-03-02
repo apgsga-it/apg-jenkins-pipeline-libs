@@ -23,7 +23,7 @@ def assembleAndDeployDb(parameter) {
             parameter.dbZipNames.each { dbZipName ->
                 if(dbZipName.contains(patchNumber)) {
                     commonPatchFunctions.log("Content of ${env.DBZIPS_FILE_PATH}/${dbZipName} zip will be use for final assembled ZIP.","assembleAndDeployDb")
-                    unzip zipFile:"${env.DBZIPS_FILE_PATH}/${dbZipName}", dir:"oracle_${i}"
+                    unzip zipFile:"${env.DBZIPS_FILE_PATH}/${dbZipName}", dir:"oracle_${String.format('%04d',i)}"
                 }
             }
             i++
