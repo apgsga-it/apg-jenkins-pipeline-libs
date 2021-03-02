@@ -17,10 +17,12 @@ def assembleAndDeployJavaService(parameter) {
 def assembleAndDeployDb(parameter) {
     if(parameter.dbZipNames.size() > 0) {
         int i=0
+        commonPatchFunctions.log("Possible ZIP(s) are : ${parameter.dbZipNames}","assembleAndDeployDb")
         parameter.patchNumbers.each { patchNumber ->
+            commonPatchFunctions.log("Searching ZIP for Patch ${patchNumber}","assembleAndDeployDb")
             def zipName = parameter.dbZipNames.stream().filter{it.contains(patchNumber)}.findFirst().get()
-            commonPatchFunctions.log("Assembling content of ${zipName} zip.","assembleAndDeployDb")
-            unzip zipFile:zipName, dir:"oracle_{i}"
+            commonPatchFunctions.log("Content of ${zipName} zip will be use for final assembled ZIP.","assembleAndDeployDb")
+            unzip zipFile:zipName, dir:"oracle_${i}"
             i++
         }
     }
