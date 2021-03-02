@@ -16,7 +16,7 @@ def assembleAndDeployJavaService(parameter) {
 
 def assembleAndDeployDb(parameter) {
     if(parameter.dbZipNames.size() > 0) {
-        int i=0
+        int i=1
         commonPatchFunctions.log("Possible ZIP(s) are : ${parameter.dbZipNames}","assembleAndDeployDb")
         parameter.patchNumbers.each { patchNumber ->
             commonPatchFunctions.log("Searching ZIP for Patch ${patchNumber}","assembleAndDeployDb")
