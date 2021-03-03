@@ -68,7 +68,7 @@ def getStatusCodeFor(patchConfig, target, toStage) {
 
 def notifyDb(patchNumbers, target, notification) {
     println "Notifying DB for patch ${patchNumbers} on target ${target} with notification ${notification}"
-    def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -notifydb ${patchNumbers},${target},${notification}"
+    def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -notifydb ${target},${notification} -patches ${patchNumbers}"
     sh "${cmd}"
     println "DONE - ${cmd}"
 }
