@@ -74,10 +74,12 @@ def notifyDb(patchNumbers, target, notification) {
 }
 
 def logPatchActivity(def patchNumber, def target, def step, def logText) {
-    def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -log ${patchNumber},${target},${step},${logText}"
-    println "Executeing ${cmd}"
-    sh "${cmd}"
-    println "Executeing ${cmd} done."
+    lock("logPatchActivity_${patchNumber}") {
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -log ${patchNumber},${target},${step},${logText}"
+        println "Executeing ${cmd}"
+        sh "${cmd}"
+        println "Executeing ${cmd} done."
+    }
 }
 
 // Used in order to have Datetime info in our pipelines
