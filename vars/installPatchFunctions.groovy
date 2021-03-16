@@ -55,31 +55,26 @@ def logPatchActivity(patchNumberList,target,logText) {
 
 def installationPostProcess(parameters) {
     if(parameters.isProductionInstallation) {
-        try {
-            parameters.patchNumbers.each{patchNumber ->
-                mergeDbObjectOnHead(patchNumber,parameters)
+        parameters.patchNumbers.each { patchNumber ->
+            try {
+                mergeDbObjectOnHead(patchNumber, parameters)
             }
-        }
-        catch(err) {
-
-            //TODO JHE patchConfig.patchNummer
-            //         patchConfig
-            //         sendMail method
-
-            commonPatchFunctions.log("Error while merging DB Object on head : ${err}","installationPostProcess")
-            def subject = "Error during post process Job for following patch:  ${patchNumber}"
-            def body = "DB Object(s) couldn't be merged on productive branch (branch name -> 'prod') for Patch ${patchNumber}, please resolve the problem manually. "
-            body += "Note that this problem didn't put the pipeline in error, that means Patch ${patchNumber} has been installed in production. "
-            body += System.getProperty("line.separator")
-            body += System.getProperty("line.separator")
-            body += "Error was: ${err}"
-            body += System.getProperty("line.separator")
-            body += System.getProperty("line.separator")
-            body += "For any question, please contact Stefan Brandenberger, Ulrich Genner or Julien Helbling. "
-            body += "Patch Configuration was: "
-            body += System.getProperty("line.separator")
-            body += System.getProperty("line.separator")
-            sendMail(subject,body,env.PIPELINE_ERROR_MAIL_TO)
+            catch (err) {
+                commonPatchFunctions.log("Error while merging DB Object on head : ${err}", "installationPostProcess")
+                def subject = "Error during post process Job for following patch:  ${patchNumber}"
+                def body = "DB Object(s) couldn't be merged on productive branch (branch name -> 'prod') for Patch ${patchNumber}, please resolve the problem manually. "
+                body += "Note that this problem didn't put the pipeline in error, that means Patch ${patchNumber} has been installed in production. "
+                body += System.getProperty("line.separator")
+                body += System.getProperty("line.separator")
+                body += "Error was: ${err}"
+                body += System.getProperty("line.separator")
+                body += System.getProperty("line.separator")
+                body += "For any question, please contact Stefan Brandenberger, Ulrich Genner or Julien Helbling. "
+                body += "Patch Configuration was: "
+                body += System.getProperty("line.separator")
+                body += System.getProperty("line.separator")
+                sendMail(subject, body, env.PIPELINE_ERROR_MAIL_TO)
+            }
         }
     }
 }
