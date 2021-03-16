@@ -56,19 +56,20 @@ def logPatchActivity(patchNumberList,target,logText) {
 def installationPostProcess(parameters) {
     if(parameters.isProductionInstallation) {
         try {
-            mergeDbObjectOnHead(parameters)
+            parameters.patchNumbers.each{patchNumber ->
+                mergeDbObjectOnHead(patchNumber,parameters)
+            }
         }
         catch(err) {
-
 
             //TODO JHE patchConfig.patchNummer
             //         patchConfig
             //         sendMail method
 
             commonPatchFunctions.log("Error while merging DB Object on head : ${err}","installationPostProcess")
-            def subject = "Error during post process Job for following patch:  ${patchConfig.patchNummer}"
-            def body = "DB Object(s) couldn't be merged on productive branch (branch name -> 'prod') for Patch ${patchConfig.patchNummer}, please resolve the problem manually. "
-            body += "Note that this problem didn't put the pipeline in error, that means Patch ${patchConfig.patchNummer} has been installed in production. "
+            def subject = "Error during post process Job for following patch:  ${patchNumber}"
+            def body = "DB Object(s) couldn't be merged on productive branch (branch name -> 'prod') for Patch ${patchNumber}, please resolve the problem manually. "
+            body += "Note that this problem didn't put the pipeline in error, that means Patch ${patchNumber} has been installed in production. "
             body += System.getProperty("line.separator")
             body += System.getProperty("line.separator")
             body += "Error was: ${err}"
@@ -78,13 +79,12 @@ def installationPostProcess(parameters) {
             body += "Patch Configuration was: "
             body += System.getProperty("line.separator")
             body += System.getProperty("line.separator")
-            body += patchConfig
             sendMail(subject,body,env.PIPELINE_ERROR_MAIL_TO)
         }
     }
 }
 
-def mergeDbObjectOnHead(patchParameter) {
+def mergeDbObjectOnHead(patchNumber,patchParameter) {
     /*
      * JHE (22.05.2018): Within this function, we're calling a "cvs" command from shell. This is not ideal, and at best we should use a similar SCM Command as within
      * 					 coFromTagcvs method. So far I didn't find an equivalent build-in function allowing to do a merge.
@@ -93,40 +93,37 @@ def mergeDbObjectOnHead(patchParameter) {
 
     def cvsRoot = env.CVS_ROOT
 
-    patchParameter.patchNumbers.each { patchNumber ->
+    def dbPatchTag = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchTag
+    def dbPatchBranch = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchBranch
+    def dbProdBranch = "prod"
 
-        def dbPatchTag = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchTag
-        def dbPatchBranch = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchBranch
-        def dbProdBranch = "prod"
+    def dbTagBeforeMerge = "${dbProdBranch}_merge_${dbPatchBranch}_before"
+    def dbTagAfterMerge = "${dbProdBranch}_merge_${dbPatchBranch}_after"
 
-        def dbTagBeforeMerge = "${dbProdBranch}_merge_${dbPatchBranch}_before"
-        def dbTagAfterMerge = "${dbProdBranch}_merge_${dbPatchBranch}_after"
-
-        commonPatchFunctions.log("Patch ${patchNumber} being merged to production branch", "mergeDbObjectOnHead")
-        patchParameter.installDbObjectsInfos."${patchNumber}".dbObjectsModuleNames.each { dbModule ->
-            commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} being merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
-            sh "cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule}"
-            commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
-            sh "cvs -d${cvsRoot} tag -F ${dbTagBeforeMerge} ${dbModule}"
-            commonPatchFunctions.log("... ${dbModule} tagged ${dbTagBeforeMerge}", "mergeDbObjectOnHead")
-            sh "cvs -d${cvsRoot} up -d -j ${dbPatchTag} ${dbModule}"
-            commonPatchFunctions.log("... ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
-            try {
-                sh "cvs -d${cvsRoot} commit -m 'merge ${dbPatchTag} to branch ${dbProdBranch}' ${dbModule}"
-            } catch (Exception mergeEx) {
-                commonPatchFunctions.log("... ${dbModule} tag ${dbPatchTag} had merge conflicts for branch ${dbProdBranch} -> forcing contents of tag ${dbPatchTag}", "mergeDbObjectOnHead")
-                def tmpFolderDir = "cvsExportTemp_${patchNumber}"
-                sh "mkdir -p ${tmpFolderDir}"
-                sh "cd ${tmpFolderDir} && cvs -d${cvsRoot} export -r ${dbPatchTag} ${dbModule}"
-                sh "cd ${tmpFolderDir} && find * -type f -exec cp -f -p {} ../{} \\;"
-                sh "rm -Rf ${tmpFolderDir}"
-                sh "cvs -d${cvsRoot} commit -m 'merge ${dbPatchTag} to branch'"
-            }
-            commonPatchFunctions.log("... ${dbModule} commited", "mergeDbObjectOnHead")
-            sh "cvs -d${cvsRoot} tag -F ${dbTagAfterMerge} ${dbModule}"
-            commonPatchFunctions.log("... ${dbModule} tagged ${dbTagAfterMerge}", "mergeDbObjectOnHead")
-            commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
+    commonPatchFunctions.log("Patch ${patchNumber} being merged to production branch", "mergeDbObjectOnHead")
+    patchParameter.installDbObjectsInfos."${patchNumber}".dbObjectsModuleNames.each { dbModule ->
+        commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} being merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
+        sh "cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule}"
+        commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
+        sh "cvs -d${cvsRoot} tag -F ${dbTagBeforeMerge} ${dbModule}"
+        commonPatchFunctions.log("... ${dbModule} tagged ${dbTagBeforeMerge}", "mergeDbObjectOnHead")
+        sh "cvs -d${cvsRoot} up -d -j ${dbPatchTag} ${dbModule}"
+        commonPatchFunctions.log("... ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
+        try {
+            sh "cvs -d${cvsRoot} commit -m 'merge ${dbPatchTag} to branch ${dbProdBranch}' ${dbModule}"
+        } catch (Exception mergeEx) {
+            commonPatchFunctions.log("... ${dbModule} tag ${dbPatchTag} had merge conflicts for branch ${dbProdBranch} -> forcing contents of tag ${dbPatchTag}", "mergeDbObjectOnHead")
+            def tmpFolderDir = "cvsExportTemp_${patchNumber}"
+            sh "mkdir -p ${tmpFolderDir}"
+            sh "cd ${tmpFolderDir} && cvs -d${cvsRoot} export -r ${dbPatchTag} ${dbModule}"
+            sh "cd ${tmpFolderDir} && find * -type f -exec cp -f -p {} ../{} \\;"
+            sh "rm -Rf ${tmpFolderDir}"
+            sh "cvs -d${cvsRoot} commit -m 'merge ${dbPatchTag} to branch'"
         }
-        commonPatchFunctions.log("Patch ${patchNumber} merged to production branch", "mergeDbObjectOnHead")
+        commonPatchFunctions.log("... ${dbModule} commited", "mergeDbObjectOnHead")
+        sh "cvs -d${cvsRoot} tag -F ${dbTagAfterMerge} ${dbModule}"
+        commonPatchFunctions.log("... ${dbModule} tagged ${dbTagAfterMerge}", "mergeDbObjectOnHead")
+        commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
     }
+    commonPatchFunctions.log("Patch ${patchNumber} merged to production branch", "mergeDbObjectOnHead")
 }
