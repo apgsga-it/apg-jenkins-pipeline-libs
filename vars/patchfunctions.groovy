@@ -9,7 +9,6 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
             (
                     lock("${service.serviceName}-${jsonParam.target}-Build") {
                         commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
-                        deleteDir()
                         publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
                         buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(service, jsonParam), revisionClonedPath)
                     }
@@ -36,7 +35,6 @@ def patchBuildDbZip(jsonParam) {
     if (dbBuildRequired(jsonParam)) {
         lock("dbBuild-${jsonParam.target}-Build") {
             commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "db-build", "started")
-            deleteDir()
             coDbModules(jsonParam)
             buildDbZip(jsonParam)
             commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "db-build", "done")
