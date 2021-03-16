@@ -1,5 +1,11 @@
 #!groovy
 
+import javax.mail.Message
+import javax.mail.Session
+import javax.mail.Transport
+import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeMessage
+
 def installDb(parameter) {
     if(parameter.installDbPatch) {
         commonPatchFunctions.log("DB Installation started","installDb")
@@ -76,6 +82,23 @@ def installationPostProcess(parameters) {
                 sendMail(subject, body, env.PIPELINE_ERROR_MAIL_TO)
             }
         }
+    }
+}
+
+def sendMail(def subject, def body, def to) {
+    Properties properties = System.getProperties()
+    properties.setProperty("mail.smtp.host", env.SMTP_HOST)
+    properties.setProperty("mail.smtp.port", env.SMTP_PORT)
+    Session session = Session.getDefaultInstance(properties)
+    try{
+        MimeMessage msg = new MimeMessage(session)
+        msg.setFrom(new InternetAddress(env.PIPELINE_MAIL_FROM))
+        to.split(',').each(){ item -> msg.addRecipient(Message.RecipientType.TO,new InternetAddress(item))}
+        msg.setSubject("${env.PIPELINE_MAIL_ENV} - ${subject}")
+        msg.setText(body)
+        Transport.send(msg)
+    } catch(RuntimeException e) {
+        println e.getMessage()
     }
 }
 
