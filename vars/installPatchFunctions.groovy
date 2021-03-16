@@ -95,26 +95,26 @@ def mergeDbObjectOnHead(patchParameter) {
 
     patchParameter.patchNumbers.each { patchNumber ->
 
-        def dbPatchTag = patchParameter.installDbObjectsInfos.patchNumber.dbPatchTag
-        def dbPatchBranch = patchParameter.installDbObjectsInfos.patchNumber.dbPatchBranch
+        def dbPatchTag = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchTag
+        def dbPatchBranch = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchBranch
         def dbProdBranch = "prod"
 
         def dbTagBeforeMerge = "${dbProdBranch}_merge_${dbPatchBranch}_before"
         def dbTagAfterMerge = "${dbProdBranch}_merge_${dbPatchBranch}_after"
 
-        commonPatchFunctions.log("Patch \"${patchNumber}\" being merged to production branch", "mergeDbObjectOnHead")
-        patchParameter.installDbObjectsInfos.patchNumber.dbObjectsModuleNames.each { dbModule ->
-            commonPatchFunctions.log("- module \"${dbModule}\" tag \"${dbPatchTag}\" being merged to branch \"${dbProdBranch}\"", "mergeDbObjectOnHead")
+        commonPatchFunctions.log("Patch ${patchNumber} being merged to production branch", "mergeDbObjectOnHead")
+        patchParameter.installDbObjectsInfos."${patchNumber}".dbObjectsModuleNames.each { dbModule ->
+            commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} being merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
             sh "cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule}"
-            commonPatchFunctions.log("... ${dbModule} checked out from branch \"${dbProdBranch}\"", "mergeDbObjectOnHead")
+            commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
             sh "cvs -d${cvsRoot} tag -F ${dbTagBeforeMerge} ${dbModule}"
             commonPatchFunctions.log("... ${dbModule} tagged ${dbTagBeforeMerge}", "mergeDbObjectOnHead")
             sh "cvs -d${cvsRoot} up -d -j ${dbPatchTag} ${dbModule}"
-            commonPatchFunctions.log("... ${dbModule} tag \"${dbPatchTag}\" merged to branch \"${dbProdBranch}\"", "mergeDbObjectOnHead")
+            commonPatchFunctions.log("... ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
             try {
                 sh "cvs -d${cvsRoot} commit -m 'merge ${dbPatchTag} to branch ${dbProdBranch}' ${dbModule}"
             } catch (Exception mergeEx) {
-                commonPatchFunctions.log("... ${dbModule} tag \"${dbPatchTag}\" had merge conflicts for branch \"${dbProdBranch}\" -> forcing contents of tag \"${dbPatchTag}\"", "mergeDbObjectOnHead")
+                commonPatchFunctions.log("... ${dbModule} tag ${dbPatchTag} had merge conflicts for branch ${dbProdBranch} -> forcing contents of tag ${dbPatchTag}", "mergeDbObjectOnHead")
                 def tmpFolderDir = "cvsExportTemp_${patchNumber}"
                 sh "mkdir -p ${tmpFolderDir}"
                 sh "cd ${tmpFolderDir} && cvs -d${cvsRoot} export -r ${dbPatchTag} ${dbModule}"
@@ -125,8 +125,8 @@ def mergeDbObjectOnHead(patchParameter) {
             commonPatchFunctions.log("... ${dbModule} commited", "mergeDbObjectOnHead")
             sh "cvs -d${cvsRoot} tag -F ${dbTagAfterMerge} ${dbModule}"
             commonPatchFunctions.log("... ${dbModule} tagged ${dbTagAfterMerge}", "mergeDbObjectOnHead")
-            commonPatchFunctions.log("- module \"${dbModule}\" tag \"${dbPatchTag}\" merged to branch \"${dbProdBranch}\"", "mergeDbObjectOnHead")
+            commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
         }
-        commonPatchFunctions.log("Patch \"${patchNumber}\" merged to production branch", "mergeDbObjectOnHead")
+        commonPatchFunctions.log("Patch ${patchNumber} merged to production branch", "mergeDbObjectOnHead")
     }
 }
