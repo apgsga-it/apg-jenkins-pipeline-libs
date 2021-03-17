@@ -11,6 +11,7 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
                         commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                         publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
                         buildAndReleaseModulesConcurrent(service, jsonParam, revisionClonedPath)
+                        updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath)
                     }
             )
         }
@@ -25,6 +26,36 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
 
         commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "done")
     }
+}
+
+def updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath) {
+    def mavenVersionNumber = mavenVersionNumber(service, revision)
+    getNonBuildArtifact(service,jsonParam).each {artifact ->
+        updateBom(service, jsonParam.target, artifact, mavenVersionNumber, revisionClonedPath)
+    }
+
+}
+
+def getNonBuildArtifact(service,jsonParam) {
+    def artifactList = []
+    service.artifactsToPatch.each {artifactsToPatch ->
+        def addArtifact = true
+        jsonParam.artifactsToBuild."${service.serviceName}".each{artifactsToBuild ->
+            if(isSameArtifact(artifactsToPatch,artifactsToBuild)) {
+                addArtifact = false
+            }
+        }
+        if(addArtifact) {
+            artifactList.add(artifactsToPatch)
+        }
+    }
+
+    return artifactList
+}
+
+def isSameArtifact(art_1,art_2) {
+    return art_1.artifactId.equals(art_2.artifactId) &&
+            art_1.groupId.equals(art_2.groupId)
 }
 
 def javaBuildRequired(jsonParam) {
@@ -148,7 +179,6 @@ def updateBom(service, target, module, mavenVersionNumber, revisionRootPath) {
 def buildModule(module, buildVersion) {
     dir("${module.name}") {
         commonPatchFunctions.log("Building Module : " + module.name + " for Version: " + buildVersion, "buildModule")
-        // TODO JHE (08.10.2020): should we deploy to Artifactory -> IT-36781
         def mvnCommand = "mvn -DbomVersion=${buildVersion} ${env.MAVEN_PROFILE} clean deploy"
         commonPatchFunctions.log("${mvnCommand}", "buildModule")
         lock("BomUpdate${buildVersion}") {
