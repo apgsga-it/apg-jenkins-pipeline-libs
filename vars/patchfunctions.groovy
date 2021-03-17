@@ -10,7 +10,8 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
                     lock("${service.serviceName}-${jsonParam.target}-Build") {
                         commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                         publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
-                        buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(service, jsonParam), revisionClonedPath)
+                        def artefactsToBuild = jsonParam.artifactsToBuild."${service.serviceName}"
+                        buildAndReleaseModulesConcurrent(artefactsToBuild, jsonParam.target, tagName(service, jsonParam), revisionClonedPath)
                     }
             )
         }
@@ -96,8 +97,7 @@ def getCoPatchDbFolderName(jsonParam) {
 }
 
 
-def buildAndReleaseModulesConcurrent(service, target, tag, revisionRootPath) {
-    def artefacts = service.artifactsToPatch
+def buildAndReleaseModulesConcurrent(artefacts, target, tag, revisionRootPath) {
     def listsByDepLevel = artefacts.groupBy { it.dependencyLevel }
     def depLevels = listsByDepLevel.keySet() as List
     depLevels.sort()
