@@ -29,6 +29,7 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
 }
 
 def updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath) {
+    def revision = commonPatchFunctions.getRevisionFor(service, target, revisionRootPath)
     def mavenVersionNumber = mavenVersionNumber(service, revision)
     getNonBuildArtifact(service,jsonParam).each {artifact ->
         updateBom(service, jsonParam.target, artifact, mavenVersionNumber, revisionClonedPath)
