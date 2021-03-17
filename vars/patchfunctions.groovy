@@ -32,7 +32,7 @@ def updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath) {
     def revision = commonPatchFunctions.getRevisionFor(service, jsonParam.target, revisionClonedPath)
     def mavenVersionNumber = mavenVersionNumber(service, revision)
     getNonBuildArtifact(service,jsonParam).each {artifact ->
-        updateBom(service, jsonParam.target, artifact, mavenVersionNumber, revisionClonedPath)
+        updateBom(service, jsonParam.target, artifact, artifact.version, revisionClonedPath)
     }
 
 }
@@ -163,14 +163,17 @@ def buildAndReleaseModule(module, service, target, revisionRootPath) {
     updateBom(service, target, module, mavenVersionNumber, revisionRootPath)
 }
 
-def updateBom(service, target, module, mavenVersionNumber, revisionRootPath) {
+// artifactNewVersion can be different when updating a framework library for which the version is fix
+// however, within the function, we get the mavenVersionNumber to ensure we sequentially update a bom for a specific revision
+def updateBom(service, target, module, artifactNewVersion, revisionRootPath) {
+    def revision = commonPatchFunctions.getRevisionFor(service, target, revisionRootPath)
+    def mavenVersionNumber = mavenVersionNumber(service, revision)
     lock("BomUpdate${mavenVersionNumber}") {
-
         commonPatchFunctions.log("updateBom for service : ${service} / on target ${target}")
         commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch, service.serviceMetaData.revisionPkgName)
         dir(service.serviceMetaData.revisionPkgName) {
             sh "chmod +x ./gradlew"
-            def cmd = "./gradlew publish -PrevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} ${env.GRADLE_OPTS} --info --stacktrace"
+            def cmd = "./gradlew publish -PrevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${artifactNewVersion} ${env.GRADLE_OPTS} --info --stacktrace"
             def result = sh(returnStdout: true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
