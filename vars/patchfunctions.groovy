@@ -10,7 +10,8 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
                     lock("${service.serviceName}-${jsonParam.target}-Build") {
                         commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                         publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
-                        buildAndReleaseModulesConcurrent(service, jsonParam.target, tagName(service, jsonParam), revisionClonedPath)
+                        buildAndReleaseModulesConcurrent(service, jsonParam, revisionClonedPath)
+                        updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath)
                     }
             )
         }
@@ -25,6 +26,37 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
 
         commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "done")
     }
+}
+
+def updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath) {
+    def revision = commonPatchFunctions.getRevisionFor(service, jsonParam.target, revisionClonedPath)
+    def mavenVersionNumber = mavenVersionNumber(service, revision)
+    getNonBuildArtifact(service,jsonParam).each {artifact ->
+        updateBom(service, jsonParam.target, artifact, artifact.version, revisionClonedPath)
+    }
+
+}
+
+def getNonBuildArtifact(service,jsonParam) {
+    def artifactList = []
+    service.artifactsToPatch.each {artifactsToPatch ->
+        def addArtifact = true
+        jsonParam.artifactsToBuild."${service.serviceName}".each{artifactsToBuild ->
+            if(isSameArtifact(artifactsToPatch,artifactsToBuild)) {
+                addArtifact = false
+            }
+        }
+        if(addArtifact) {
+            artifactList.add(artifactsToPatch)
+        }
+    }
+
+    return artifactList
+}
+
+def isSameArtifact(art_1,art_2) {
+    return art_1.artifactId.equals(art_2.artifactId) &&
+            art_1.groupId.equals(art_2.groupId)
 }
 
 def javaBuildRequired(jsonParam) {
@@ -96,9 +128,11 @@ def getCoPatchDbFolderName(jsonParam) {
 }
 
 
-def buildAndReleaseModulesConcurrent(service, target, tag, revisionRootPath) {
-    def artefacts = service.artifactsToPatch
-    def listsByDepLevel = artefacts.groupBy { it.dependencyLevel }
+def buildAndReleaseModulesConcurrent(service, jsonParam, revisionRootPath) {
+    def tag = tagName(service, jsonParam)
+    def target = jsonParam.target
+    def artefactsToBuild = jsonParam.artifactsToBuild."${service.serviceName}"
+    def listsByDepLevel = artefactsToBuild.groupBy { it.dependencyLevel }
     def depLevels = listsByDepLevel.keySet() as List
     depLevels.sort()
     depLevels.reverse(true)
@@ -129,14 +163,17 @@ def buildAndReleaseModule(module, service, target, revisionRootPath) {
     updateBom(service, target, module, mavenVersionNumber, revisionRootPath)
 }
 
-def updateBom(service, target, module, mavenVersionNumber, revisionRootPath) {
+// artifactNewVersion can be different when updating a framework library for which the version is fix
+// however, within the function, we get the mavenVersionNumber to ensure we sequentially update a bom for a specific revision
+def updateBom(service, target, module, artifactNewVersion, revisionRootPath) {
+    def revision = commonPatchFunctions.getRevisionFor(service, target, revisionRootPath)
+    def mavenVersionNumber = mavenVersionNumber(service, revision)
     lock("BomUpdate${mavenVersionNumber}") {
-
         commonPatchFunctions.log("updateBom for service : ${service} / on target ${target}")
         commonPatchFunctions.coFromBranchCvs(service.serviceMetaData.microServiceBranch, service.serviceMetaData.revisionPkgName)
         dir(service.serviceMetaData.revisionPkgName) {
             sh "chmod +x ./gradlew"
-            def cmd = "./gradlew publish -PrevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${mavenVersionNumber} ${env.GRADLE_OPTS} --info --stacktrace"
+            def cmd = "./gradlew publish -PrevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${artifactNewVersion} ${env.GRADLE_OPTS} --info --stacktrace"
             def result = sh(returnStdout: true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
         }
@@ -146,7 +183,6 @@ def updateBom(service, target, module, mavenVersionNumber, revisionRootPath) {
 def buildModule(module, buildVersion) {
     dir("${module.name}") {
         commonPatchFunctions.log("Building Module : " + module.name + " for Version: " + buildVersion, "buildModule")
-        // TODO JHE (08.10.2020): should we deploy to Artifactory -> IT-36781
         def mvnCommand = "mvn -DbomVersion=${buildVersion} ${env.MAVEN_PROFILE} clean deploy"
         commonPatchFunctions.log("${mvnCommand}", "buildModule")
         lock("BomUpdate${buildVersion}") {
