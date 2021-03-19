@@ -183,7 +183,7 @@ def updateBom(service, target, module, artifactNewVersion, revisionRootPath) {
 def buildModule(module, buildVersion) {
     dir("${module.name}") {
         commonPatchFunctions.log("Building Module : " + module.name + " for Version: " + buildVersion, "buildModule")
-        def mvnCommand = "mvn -DbomVersion=${buildVersion} ${env.MAVEN_PROFILE} clean deploy"
+        def mvnCommand = "mvn -DbomVersion=${buildVersion} clean deploy ${env.MAVEN_PROFILE}"
         commonPatchFunctions.log("${mvnCommand}", "buildModule")
         lock("BomUpdate${buildVersion}") {
             withMaven(maven: 'Default') { sh "${mvnCommand}" }
