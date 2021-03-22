@@ -75,7 +75,7 @@ def patchBuildDbZip(jsonParam) {
 }
 
 def dbBuildRequired(jsonParam) {
-    return !jsonParam.dockerServices.isEmpty() || !jsonParam.dbObjects.isEmpty()
+    return !jsonParam.dbObjects.isEmpty()
 }
 
 def buildDbZip(jsonParam) {
