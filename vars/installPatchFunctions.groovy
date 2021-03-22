@@ -30,6 +30,18 @@ def installJavaServices(parameters) {
 
 }
 
+def installDockerServices(parameters) {
+    if(parameters.installDockerServices) {
+        commonPatchFunctions.log("Docker service Installation started","installDockerServices")
+        def installCmd = "${parameters.pathToDockerInstallScript} ${parameters.target} ${parameters.patchNumbers.join(",")}"
+        def result = sh ( returnStdout : true, script: installCmd).trim()
+        println "result of ${installCmd} : ${result}"
+    }
+    else {
+        commonPatchFunctions.log("No Docker Services to be installed!","installDockerServices")
+    }
+}
+
 def doInstallJavaServices(packagers,target) {
     commonPatchFunctions.log("Installation will be done for following packagers : ${packagers}", "doInstallJavaServices")
     packagers.each{p ->
