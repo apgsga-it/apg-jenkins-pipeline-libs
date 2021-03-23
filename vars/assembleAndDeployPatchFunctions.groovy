@@ -32,6 +32,14 @@ def deployDbZip(parameter) {
     def deployCmd = "scp -p ${dbZipFileName}.zip ${parameter.dbZipDeployTarget}:Downloads"
     def result = sh ( returnStdout : true, script: deployCmd).trim()
     println "result of ${deployCmd} : ${result}"
+
+    // JHE (23.03.21): This is done here mainly for configuration convenience of SSH Keys
+    if(parameter.forProduction) {
+        commonPatchFunctions.log("Assemble and deploy has been done for production, result DBZip will be archived","deployDbZip")
+        def scpCmd = "scp -p -o \"StrictHostKeyChecking no\" ${dbZipFileName}.zip ${env.ARCHIVE_SERVER_HOST}:${env.ARCHIVE_SERVER_PATH}"
+        def scpResult = sh ( returnStdout : true, script: scpCmd).trim()
+        println "result of ${scpCmd} : ${scpResult}"
+    }
 }
 
 def dbPatchContentFolderName(parameter) {
