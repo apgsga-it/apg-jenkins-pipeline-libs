@@ -113,7 +113,7 @@ def doAssembleAndDeploy(parameter,revisionClonedPath) {
             // JHE (23.03.21): This is done here mainly for configuration convenience of SSH Keys
             if(parameter.forProduction) {
                 commonPatchFunctions.log("Assemble and deploy has been done for production, result Artifacts will be archived","doAssembleAndDeploy")
-                def scpCmd = "scp -p -o \"StrictHostKeyChecking no\" build/distributions/*.* ${env.ARCHIVE_SERVER_HOST}:${env.ARCHIVE_SERVER_PATH}"
+                def scpCmd = "scp -p -o \"StrictHostKeyChecking no\" build/distributions/*.* ${env.ARCHIVE_SERVER_HOST}:${env.ARCHIVE_SERVER_PATH}\\${parameter.target}"
                 def scpResult = sh ( returnStdout : true, script: scpCmd).trim()
                 println "result of ${scpCmd} : ${scpResult}"
             }
