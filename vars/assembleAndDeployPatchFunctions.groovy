@@ -109,6 +109,14 @@ def doAssembleAndDeploy(parameter,revisionClonedPath) {
             def cmd = "./gradlew clean buildPkg deployPkg -Papg.common.repo.gradle.local.repo.from.maven=false -PrevisionRootPath=${revisionClonedPath} -PtargetHost=${packager.targetHost} -PinstallTarget=${parameter.target} ${env.GRADLE_OPTS} --info --stacktrace"
             def result = sh ( returnStdout : true, script: cmd).trim()
             println "result of ${cmd} : ${result}"
+
+            // JHE (23.03.21): This is done here mainly for configuration convenience of SSH Keys
+            if(parameter.isForProduction) {
+                commonPatchFunctions.log("Assemble and deploy has been done for production, result Artifacts will be archived","doAssembleAndDeploy")
+                def scpCmd = "scp -p -o \"StrictHostKeyChecking no\" build/distributions/*.* ${env.ARCHIVE_SERVER_HOST}:${env.ARCHIVE_SERVER_PATH}"
+                def scpResult = sh ( returnStdout : true, script: scpCmd).trim()
+                println "result of ${scpCmd} : ${scpResult}"
+            }
         }
         commonPatchFunctions.log("Assembling ${packager.name} done!","doAssembleAndDeploy")
     }
