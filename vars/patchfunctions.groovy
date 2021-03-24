@@ -261,8 +261,7 @@ def publishNewRevisionFor(service, patchNumber, target, revisionRootPath) {
             sh "chmod +x ./gradlew"
             def cmd = "./gradlew clean publish -PnewRevision -PpatchRevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PpatchFilePath=${env.PATCH_DB_FOLDER}/Patch${patchNumber}.json ${env.GRADLE_OPTS} --stacktrace --info"
             commonPatchFunctions.log("Following will be executed : ${cmd}", "publishNewRevisionFor")
-            def result = sh(returnStdout: true, script: cmd).trim()
-            println "result of ${cmd} : ${result}"
+            commonPatchFunctions.runShCommandWithRetry(cmd,5,60)
         }
     }
 }
