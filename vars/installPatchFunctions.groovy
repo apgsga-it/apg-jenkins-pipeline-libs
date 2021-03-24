@@ -71,6 +71,13 @@ def logPatchActivity(patchNumberList,target,logText) {
     }
 }
 
+def cleanupIntermediateDbZips(patchNumber) {
+     commonPatchFunctions.log("DB-ZIP installed in prod, removing ZIPs from ${env.DBZIPS_FILE_PATH} for following patche : ${patchNumber}","cleanupIntermediateDbZips")
+     def rmCmd = "rm -f ${env.DBZIPS_FILE_PATH}/*${patchNumber}*.zip"
+     def rmResult = sh ( returnStdout : true, script: rmCmd).trim()
+     println "result of ${rmCmd} : ${rmResult}"
+}
+
 def installationPostProcess(parameters) {
     if(parameters.isProductionInstallation) {
         parameters.patchNumbers.each { patchNumber ->
@@ -93,6 +100,10 @@ def installationPostProcess(parameters) {
                 body += System.getProperty("line.separator")
                 sendMail(subject, body, env.PIPELINE_ERROR_MAIL_TO)
             }
+        }
+
+        parameters.patchNumbers.each {patchNumber ->
+            cleanupIntermediateDbZips(patchNumber)
         }
     }
 }
