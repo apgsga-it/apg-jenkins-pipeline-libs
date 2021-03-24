@@ -174,8 +174,7 @@ def updateBom(service, target, module, artifactNewVersion, revisionRootPath) {
         dir(service.serviceMetaData.revisionPkgName) {
             sh "chmod +x ./gradlew"
             def cmd = "./gradlew publish -PrevisionRootPath=${revisionRootPath} -PbomBaseVersion=${bomBaseVersionFor(service)} -PinstallTarget=${target} -PupdateArtifact=${module.groupId}:${module.artifactId}:${artifactNewVersion} ${env.GRADLE_OPTS} --info --stacktrace"
-            def result = sh(returnStdout: true, script: cmd).trim()
-            println "result of ${cmd} : ${result}"
+            commonPatchFunctions.runShCommandWithRetry(cmd,5,60)
         }
     }
 }
@@ -186,7 +185,9 @@ def buildModule(module, buildVersion) {
         def mvnCommand = "mvn -DbomVersion=${buildVersion} clean deploy ${env.MAVEN_PROFILE}"
         commonPatchFunctions.log("${mvnCommand}", "buildModule")
         lock("BomUpdate${buildVersion}") {
-            withMaven(maven: 'Default') { sh "${mvnCommand}" }
+            withMaven(maven: 'Default') {
+                commonPatchFunctions.runShCommandWithRetry(mvnCommand,5,60)
+            }
         }
     }
 }
@@ -198,7 +199,9 @@ def releaseModule(module, revision, revisionMnemoPart, mavenVersionNumber) {
         commonPatchFunctions.log("BuildVersion = ${buildVersion}", "releaseModule")
         def mvnCommand = "mvn ${env.MAVEN_PROFILE} -DbomVersion=${buildVersion}" + ' clean build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.incrementalVersion}.' + revisionMnemoPart + '-' + revision
         commonPatchFunctions.log("${mvnCommand}", "releaseModule")
-        withMaven(maven: 'Default') { sh "${mvnCommand}" }
+        withMaven(maven: 'Default') {
+            commonPatchFunctions.runShCommandWithRetry(mvnCommand,5,60)
+        }
     }
 }
 

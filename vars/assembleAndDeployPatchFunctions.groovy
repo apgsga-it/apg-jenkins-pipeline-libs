@@ -4,7 +4,7 @@ def assembleAndDeployJavaService(parameter) {
     if(parameter.packagers.size() > 0) {
         def revisionClonedPath = pwd()
         lock("mergeRevisionInformation") {
-            commonPatchFunctions.copyRevisionFilesTo(revisionClonedPath)
+                commonPatchFunctions.copyRevisionFilesTo(revisionClonedPath)
         }
         checkoutPackagerProjects(parameter.packagers)
         doAssembleAndDeploy(parameter,revisionClonedPath)
@@ -115,8 +115,7 @@ def doAssembleAndDeploy(parameter,revisionClonedPath) {
         dir(packager.name) {
             sh "chmod +x ./gradlew"
             def cmd = "./gradlew clean buildPkg deployPkg -Papg.common.repo.gradle.local.repo.from.maven=false -PrevisionRootPath=${revisionClonedPath} -PtargetHost=${packager.targetHost} -PinstallTarget=${parameter.target} ${env.GRADLE_OPTS} --info --stacktrace"
-            def result = sh ( returnStdout : true, script: cmd).trim()
-            println "result of ${cmd} : ${result}"
+            commonPatchFunctions.runShCommandWithRetry(cmd,5,60)
 
             // JHE (23.03.21): This is done here mainly for configuration convenience of SSH Keys
             if(parameter.forProduction) {

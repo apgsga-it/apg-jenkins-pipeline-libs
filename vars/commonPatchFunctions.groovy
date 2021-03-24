@@ -129,3 +129,19 @@ def deleteFolder(folderPath) {
             folderDeleteOperation(folderPath: folderPath)
     ])
 }
+
+// JHE (08.06.2020): Function introduced for CM-297. Artifactory is sometime unresponsive. We don't know the root cause, and couldn't identify where it comes from.
+//					 What we know is that if we try again, it generally works, reason why we introduced this workaround.
+def runShCommandWithRetry(cmd,maxRetry, delayBetweenExecutionInSec) {
+    def attempt = 1
+    def res = sh returnStatus:true, script: cmd
+    while(res != 0 && attempt <= maxRetry) {
+        log("Retry number ${attempt} (max retry: ${maxRetry})","runShCommandWithRetry")
+        sleep(delayBetweenExecutionInSec)
+        res = sh returnStatus:true, script: cmd
+        attempt++
+    }
+    if(attempt > maxRetry) {
+        throw new RuntimeException("Following cmd reached max number of retry: ${cmd}")
+    }
+}
