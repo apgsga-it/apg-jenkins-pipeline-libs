@@ -17,7 +17,7 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
                             mergeRevisionToMainJson(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
                         }
                     }
-        })
+        )}
         commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "done")
     }
 }
