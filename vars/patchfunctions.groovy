@@ -5,25 +5,19 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
 
         commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "started")
         // TODO JHE (05.10.2020): We could build service in parallel, but not a priority for the first release
-        jsonParam.services.each { service ->
-            (
+        jsonParam.services.each { service -> (
+
                     lock("${service.serviceName}-${jsonParam.target}-Build") {
                         commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
                         publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
                         buildAndReleaseModulesConcurrent(service, jsonParam, revisionClonedPath)
                         updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath)
+
+                        lock("mergeRevisionInformation") {
+                            mergeRevisionToMainJson(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
+                        }
                     }
-            )
-        }
-
-        lock("mergeRevisionInformation") {
-            jsonParam.services.each { service ->
-                (
-                        mergeRevisionToMainJson(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
-                )
-            }
-        }
-
+        )}
         commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "done")
     }
 }
