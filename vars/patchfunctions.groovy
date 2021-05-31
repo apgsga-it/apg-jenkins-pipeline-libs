@@ -2,23 +2,28 @@
 
 def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
     if (javaBuildRequired(jsonParam)) {
+        // JHE (31.05.2021) : This lock will obviously slow down the build process. However, we want to be 100% sure that patches with mix of different services won't
+        //                    take eachother over, and publish new revisions for services too early.
+        lock("${jsonParam.target}-Build") {
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "started")
+            // TODO JHE (05.10.2020): We could build service in parallel, but not a priority for the first release
+            jsonParam.services.each { service ->
+                (
 
-        commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "started")
-        // TODO JHE (05.10.2020): We could build service in parallel, but not a priority for the first release
-        jsonParam.services.each { service -> (
+                        lock("${service.serviceName}-${jsonParam.target}-Build") {
+                            commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
+                            publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
+                            buildAndReleaseModulesConcurrent(service, jsonParam, revisionClonedPath)
+                            updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath)
 
-                    lock("${service.serviceName}-${jsonParam.target}-Build") {
-                        commonPatchFunctions.log("Building following service : ${service}", "patchBuildsConcurrent")
-                        publishNewRevisionFor(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
-                        buildAndReleaseModulesConcurrent(service, jsonParam, revisionClonedPath)
-                        updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath)
-
-                        lock("mergeRevisionInformation") {
-                            mergeRevisionToMainJson(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
+                            lock("mergeRevisionInformation") {
+                                mergeRevisionToMainJson(service, jsonParam.patchNumber, jsonParam.target, revisionClonedPath)
+                            }
                         }
-                    }
-        )}
-        commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "done")
+                )
+            }
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "done")
+        }
     }
 }
 
