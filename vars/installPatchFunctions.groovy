@@ -79,7 +79,8 @@ def cleanupIntermediateDbZips(patchNumber) {
 }
 
 def installationPostProcess(parameters) {
-    if(parameters.isProductionInstallation) {
+    // TODO JHE: Uncomment the below if, used for quick local test from jhe_cm-407 branch
+    //if(parameters.isProductionInstallation) {
         parameters.patchNumbers.each { patchNumber ->
             try {
                 mergeDbObjectOnHead(patchNumber, parameters)
@@ -105,7 +106,7 @@ def installationPostProcess(parameters) {
         parameters.patchNumbers.each {patchNumber ->
             cleanupIntermediateDbZips(patchNumber)
         }
-    }
+   // }
 }
 
 def sendMail(def subject, def body, def to) {
@@ -143,6 +144,7 @@ def mergeDbObjectOnHead(patchNumber,patchParameter) {
 
     commonPatchFunctions.log("Patch ${patchNumber} being merged to production branch", "mergeDbObjectOnHead")
     patchParameter.installDbObjectsInfos."${patchNumber}".dbObjectsModuleNames.each { dbModule ->
+        // Merging changes to prod branch
         commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} being merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
         sh "cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule}"
         commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
@@ -155,6 +157,24 @@ def mergeDbObjectOnHead(patchNumber,patchParameter) {
         sh "rm -Rf ${tmpFolderDir}"
         sh "cvs -d${cvsRoot} commit -m 'merge ${dbPatchTag} to branch ${dbProdBranch}' ${dbModule}"
         commonPatchFunctions.log("... ${dbModule} commited", "mergeDbObjectOnHead")
+
+        // Adding new file to prod branch
+        def tmpFolderDirForPatchBranchCheckout = "cvsPatchBranchCheckoutTemp_${patchNumber}"
+        sh "cd ${tmpFolderDirForPatchBranchCheckout} && cvs -d${cvsRoot} co -r${dbPatchTag} ${dbModule} && cd .."
+        sh "cd ${tmpFolderDirForPatchBranchCheckout} && cvs -d${cvsRoot} tag -b ${dbProdBranch} && cd .."
+        sh "rm -rf ${tmpFolderDirForPatchBranchCheckout}"
+
+        // Deleting file from prod branch
+        def tmpProdBranchFolder = "cvsProdBranchTemp_${patchNumber}"
+        def tmpPatchBranchFolder = "cvsPatchBranchTemp_${patchNumber}"
+        sh "mkdir -p ${tmpProdBranchFolder}"
+        sh "mkdir -p ${tmpPatchBranchFolder}"
+        sh "cd ${tmpProdBranchFolder} && cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule} && cd .."
+        sh "cd ${tmpPatchBranchFolder} && cvs -d${cvsRoot} co -r${dbPatchTag} ${dbModule} && cd .."
+        sh "diff -r ${tmpPatchBranchFolder} ${tmpPatchBranchFolder} | grep cvsProd | awk '{sub(/Only in /,\"\")sub(/: /,\"/\")}1' | xargs rm -rf ; cvs -d${cvsRoot} remove"
+        sh "cvs -d${cvsRoot} commit -m 'resource deleted from prod branch' ${dbModule}"
+        sh "rm -rf ${tmpProdBranchFolder}"
+        sh "rm -rf ${tmpPatchBranchFolder}"
         sh "cvs -d${cvsRoot} tag -F ${dbTagAfterMerge} ${dbModule}"
         commonPatchFunctions.log("... ${dbModule} tagged ${dbTagAfterMerge}", "mergeDbObjectOnHead")
         commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
