@@ -99,7 +99,8 @@ def installationPostProcess(parameters) {
                 body += "Patch Configuration was: "
                 body += System.getProperty("line.separator")
                 body += System.getProperty("line.separator")
-                sendMail(subject, body, env.PIPELINE_ERROR_MAIL_TO)
+                // TODO JHE, uncomment this, commented for local testing only ...
+                //sendMail(subject, body, env.PIPELINE_ERROR_MAIL_TO)
             }
         }
 
