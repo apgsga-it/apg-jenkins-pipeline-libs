@@ -161,6 +161,7 @@ def mergeDbObjectOnHead(patchNumber,patchParameter) {
 
         // Adding new file to prod branch
         def tmpFolderDirForPatchBranchCheckout = "cvsPatchBranchCheckoutTemp_${patchNumber}"
+        sh "mkdir -p ${tmpFolderDirForPatchBranchCheckout}"
         sh "cd ${tmpFolderDirForPatchBranchCheckout} && cvs -d${cvsRoot} co -r${dbPatchTag} ${dbModule} && cd .."
         sh "cd ${tmpFolderDirForPatchBranchCheckout} && cvs -d${cvsRoot} tag -b ${dbProdBranch} && cd .."
         sh "rm -rf ${tmpFolderDirForPatchBranchCheckout}"
