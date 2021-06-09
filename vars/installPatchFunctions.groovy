@@ -145,12 +145,15 @@ def mergeDbObjectOnHead(patchNumber,patchParameter) {
 
     commonPatchFunctions.log("Patch ${patchNumber} being merged to production branch", "mergeDbObjectOnHead")
     patchParameter.installDbObjectsInfos."${patchNumber}".dbObjectsModuleNames.each { dbModule ->
-        // Merging changes to prod branch
         commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} being merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
-        sh "cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule}"
-        commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
+        // Tagging before merge
         sh "cvs -d${cvsRoot} tag -F ${dbTagBeforeMerge} ${dbModule}"
         commonPatchFunctions.log("... ${dbModule} tagged ${dbTagBeforeMerge}", "mergeDbObjectOnHead")
+
+        // Merging changes for pre-existing files to prod branch
+        commonPatchFunctions.log("Starting to merge pre-existing files to prod branch", "mergeDbObjectOnHead")
+        sh "cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule}"
+        commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
         def tmpFolderDir = "cvsExportTemp_${patchNumber}"
         sh "mkdir -p ${tmpFolderDir}"
         sh "cd ${tmpFolderDir} && cvs -d${cvsRoot} export -r ${dbPatchTag} ${dbModule} && cd .."
@@ -158,28 +161,36 @@ def mergeDbObjectOnHead(patchNumber,patchParameter) {
         sh "rm -Rf ${tmpFolderDir}"
         sh "cvs -d${cvsRoot} commit -m 'merge ${dbPatchTag} to branch ${dbProdBranch}' ${dbModule}"
         commonPatchFunctions.log("... ${dbModule} commited", "mergeDbObjectOnHead")
+        commonPatchFunctions.log("DONE - merge pre-existing files to prod branch", "mergeDbObjectOnHead")
 
         // Adding new file to prod branch
+        commonPatchFunctions.log("Starting to add new files to prod branch", "mergeDbObjectOnHead")
         def tmpFolderDirForPatchBranchCheckout = "cvsPatchBranchCheckoutTemp_${patchNumber}"
         sh "mkdir -p ${tmpFolderDirForPatchBranchCheckout}"
         sh "cd ${tmpFolderDirForPatchBranchCheckout} && cvs -d${cvsRoot} co -r${dbPatchTag} ${dbModule} && cd .."
         sh "cd ${tmpFolderDirForPatchBranchCheckout} && cvs -d${cvsRoot} tag -b ${dbProdBranch} && cd .."
         sh "rm -rf ${tmpFolderDirForPatchBranchCheckout}"
+        commonPatchFunctions.log("DONE - add new files to prod branch", "mergeDbObjectOnHead")
 
         // Deleting file from prod branch
+        /*
         def tmpProdBranchFolder = "cvsProdBranchTemp_${patchNumber}"
         def tmpPatchBranchFolder = "cvsPatchBranchTemp_${patchNumber}"
         sh "mkdir -p ${tmpProdBranchFolder}"
         sh "mkdir -p ${tmpPatchBranchFolder}"
         sh "cd ${tmpProdBranchFolder} && cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule} && cd .."
         sh "cd ${tmpPatchBranchFolder} && cvs -d${cvsRoot} co -r${dbPatchTag} ${dbModule} && cd .."
-        sh "diff -r ${tmpPatchBranchFolder} ${tmpPatchBranchFolder} | grep cvsProd | awk '{sub(/Only in /,\"\")sub(/: /,\"/\")}1' | xargs rm -rf ; cvs -d${cvsRoot} remove"
+        sh "diff -r ${tmpProdBranchFolder} ${tmpPatchBranchFolder} | grep cvsProd | awk '{sub(/Only in /,\"\")sub(/: /,\"/\")}1' | xargs rm -rf ; cvs -d${cvsRoot} remove"
         sh "cvs -d${cvsRoot} commit -m 'resource deleted from prod branch' ${dbModule}"
         sh "rm -rf ${tmpProdBranchFolder}"
         sh "rm -rf ${tmpPatchBranchFolder}"
+*/
+
+        // Tagging after merge
         sh "cvs -d${cvsRoot} tag -F ${dbTagAfterMerge} ${dbModule}"
         commonPatchFunctions.log("... ${dbModule} tagged ${dbTagAfterMerge}", "mergeDbObjectOnHead")
-        commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
+
+        commonPatchFunctions.log("DONE - module ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
     }
     commonPatchFunctions.log("Patch ${patchNumber} merged to production branch", "mergeDbObjectOnHead")
 }
