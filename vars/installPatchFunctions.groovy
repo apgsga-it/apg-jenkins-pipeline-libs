@@ -146,14 +146,17 @@ def mergeDbObjectOnHead(patchNumber,patchParameter) {
     commonPatchFunctions.log("Patch ${patchNumber} being merged to production branch", "mergeDbObjectOnHead")
     patchParameter.installDbObjectsInfos."${patchNumber}".dbObjectsModuleNames.each { dbModule ->
         commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} being merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
-        // Tagging before merge
+
+        // Checking-out and tagging before merge
+        commonPatchFunctions.log("Starting to checking out and tagging before starting the merge", "mergeDbObjectOnHead")
+        sh "cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule}"
+        commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
         sh "cvs -d${cvsRoot} tag -F ${dbTagBeforeMerge} ${dbModule}"
         commonPatchFunctions.log("... ${dbModule} tagged ${dbTagBeforeMerge}", "mergeDbObjectOnHead")
+        commonPatchFunctions.log("DONE - checking out and tagging before starting the merge", "mergeDbObjectOnHead")
 
         // Merging changes for pre-existing files to prod branch
         commonPatchFunctions.log("Starting to merge pre-existing files to prod branch", "mergeDbObjectOnHead")
-        sh "cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule}"
-        commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
         def tmpFolderDir = "cvsExportTemp_${patchNumber}"
         sh "mkdir -p ${tmpFolderDir}"
         sh "cd ${tmpFolderDir} && cvs -d${cvsRoot} export -r ${dbPatchTag} ${dbModule} && cd .."
