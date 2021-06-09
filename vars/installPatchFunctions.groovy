@@ -79,8 +79,7 @@ def cleanupIntermediateDbZips(patchNumber) {
 }
 
 def installationPostProcess(parameters) {
-    // TODO JHE: Uncomment the below if, used for quick local test from jhe_cm-407 branch
-    //if(parameters.isProductionInstallation) {
+    if(parameters.isProductionInstallation) {
         parameters.patchNumbers.each { patchNumber ->
             try {
                 mergeDbObjectOnHead(patchNumber, parameters)
@@ -99,15 +98,14 @@ def installationPostProcess(parameters) {
                 body += "Patch Configuration was: "
                 body += System.getProperty("line.separator")
                 body += System.getProperty("line.separator")
-                // TODO JHE, uncomment this, commented for local testing only ...
-                //sendMail(subject, body, env.PIPELINE_ERROR_MAIL_TO)
+                sendMail(subject, body, env.PIPELINE_ERROR_MAIL_TO)
             }
         }
 
         parameters.patchNumbers.each {patchNumber ->
             cleanupIntermediateDbZips(patchNumber)
         }
-   // }
+   }
 }
 
 def sendMail(def subject, def body, def to) {
