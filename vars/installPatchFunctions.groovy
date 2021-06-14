@@ -105,7 +105,7 @@ def installationPostProcess(parameters) {
         parameters.patchNumbers.each {patchNumber ->
             cleanupIntermediateDbZips(patchNumber)
         }
-    }
+   }
 }
 
 def sendMail(def subject, def body, def to) {
@@ -125,39 +125,63 @@ def sendMail(def subject, def body, def to) {
     }
 }
 
-def mergeDbObjectOnHead(patchNumber,patchParameter) {
-    /*
-     * JHE (22.05.2018): Within this function, we're calling a "cvs" command from shell. This is not ideal, and at best we should use a similar SCM Command as within
-     * 					 coFromTagcvs method. So far I didn't find an equivalent build-in function allowing to do a merge.
-     *
-     */
+private def checkoutAndTagModuleBeforeMerge(dbModule,dbProdBranch,patchParameter,patchNumber) {
+    def dbPatchBranch = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchBranch
+    def dbTagBeforeMerge = "${dbProdBranch}_merge_${dbPatchBranch}_before"
+    commonPatchFunctions.log("Starting to checking out and tagging before starting the merge", "mergeDbObjectOnHead")
+    sh "cvs -d${env.CVS_ROOT} co -r${dbProdBranch} ${dbModule}"
+    commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
+    sh "cvs -d${env.CVS_ROOT} tag -F ${dbTagBeforeMerge} ${dbModule}"
+    commonPatchFunctions.log("... ${dbModule} tagged ${dbTagBeforeMerge}", "mergeDbObjectOnHead")
+    commonPatchFunctions.log("DONE - checking out and tagging before starting the merge", "mergeDbObjectOnHead")
+}
 
-    def cvsRoot = env.CVS_ROOT
+private def mergePreExistingFilesOnProdBranch(dbModule,dbProdBranch,patchParameter,patchNumber) {
+    def dbPatchTag = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchTag
+    commonPatchFunctions.log("Starting to merge pre-existing files to prod branch", "mergeDbObjectOnHead")
+    def tmpFolderDir = "cvsExportTemp_${patchNumber}"
+    sh "mkdir -p ${tmpFolderDir}"
+    sh "cd ${tmpFolderDir} && cvs -d${env.CVS_ROOT} export -r ${dbPatchTag} ${dbModule} && cd .."
+    sh "cd ${tmpFolderDir} && find * -type f -exec cp -f -p {} ../{} \\; && cd .."
+    sh "rm -Rf ${tmpFolderDir}"
+    sh "cvs -d${env.CVS_ROOT} commit -m 'merge ${dbPatchTag} to branch ${dbProdBranch}' ${dbModule}"
+    commonPatchFunctions.log("... ${dbModule} commited", "mergeDbObjectOnHead")
+    commonPatchFunctions.log("DONE - merge pre-existing files to prod branch", "mergeDbObjectOnHead")
+
+}
+
+private def addNewFilesToProdBranch(dbModule,dbProdBranch,patchParameter,patchNumber) {
+    def dbPatchTag = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchTag
+    commonPatchFunctions.log("Starting to add new files to prod branch", "mergeDbObjectOnHead")
+    def tmpFolderDirForPatchBranchCheckout = "cvsPatchBranchCheckoutTemp_${patchNumber}"
+    sh "mkdir -p ${tmpFolderDirForPatchBranchCheckout}"
+    sh "cd ${tmpFolderDirForPatchBranchCheckout} && cvs -d${env.CVS_ROOT} co -r${dbPatchTag} ${dbModule} && cd .."
+    sh "cd ${tmpFolderDirForPatchBranchCheckout} && cvs -d${env.CVS_ROOT} tag -b ${dbProdBranch} && cd .."
+    sh "rm -rf ${tmpFolderDirForPatchBranchCheckout}"
+    commonPatchFunctions.log("DONE - add new files to prod branch", "mergeDbObjectOnHead")
+}
+
+private def tagAfterMerge(dbModule,dbProdBranch,patchParameter,patchNumber) {
+    def dbPatchBranch = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchBranch
+    def dbTagAfterMerge = "${dbProdBranch}_merge_${dbPatchBranch}_after"
+    sh "cvs -d${env.CVS_ROOT} tag -F ${dbTagAfterMerge} ${dbModule}"
+    commonPatchFunctions.log("... ${dbModule} tagged ${dbTagAfterMerge}", "mergeDbObjectOnHead")
+
+}
+
+def mergeDbObjectOnHead(patchNumber,patchParameter) {
 
     def dbPatchTag = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchTag
-    def dbPatchBranch = patchParameter.installDbObjectsInfos."${patchNumber}".dbPatchBranch
     def dbProdBranch = "prod"
-
-    def dbTagBeforeMerge = "${dbProdBranch}_merge_${dbPatchBranch}_before"
-    def dbTagAfterMerge = "${dbProdBranch}_merge_${dbPatchBranch}_after"
 
     commonPatchFunctions.log("Patch ${patchNumber} being merged to production branch", "mergeDbObjectOnHead")
     patchParameter.installDbObjectsInfos."${patchNumber}".dbObjectsModuleNames.each { dbModule ->
         commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} being merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
-        sh "cvs -d${cvsRoot} co -r${dbProdBranch} ${dbModule}"
-        commonPatchFunctions.log("... ${dbModule} checked out from branch ${dbProdBranch}", "mergeDbObjectOnHead")
-        sh "cvs -d${cvsRoot} tag -F ${dbTagBeforeMerge} ${dbModule}"
-        commonPatchFunctions.log("... ${dbModule} tagged ${dbTagBeforeMerge}", "mergeDbObjectOnHead")
-        def tmpFolderDir = "cvsExportTemp_${patchNumber}"
-        sh "mkdir -p ${tmpFolderDir}"
-        sh "cd ${tmpFolderDir} && cvs -d${cvsRoot} export -r ${dbPatchTag} ${dbModule} && cd .."
-        sh "cd ${tmpFolderDir} && find * -type f -exec cp -f -p {} ../{} \\; && cd .."
-        sh "rm -Rf ${tmpFolderDir}"
-        sh "cvs -d${cvsRoot} commit -m 'merge ${dbPatchTag} to branch ${dbProdBranch}' ${dbModule}"
-        commonPatchFunctions.log("... ${dbModule} commited", "mergeDbObjectOnHead")
-        sh "cvs -d${cvsRoot} tag -F ${dbTagAfterMerge} ${dbModule}"
-        commonPatchFunctions.log("... ${dbModule} tagged ${dbTagAfterMerge}", "mergeDbObjectOnHead")
-        commonPatchFunctions.log("- module ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
+        checkoutAndTagModuleBeforeMerge(dbModule,dbProdBranch,patchParameter,patchNumber)
+        mergePreExistingFilesOnProdBranch(dbModule,dbProdBranch,patchParameter,patchNumber)
+        addNewFilesToProdBranch(dbModule,dbProdBranch,patchParameter,patchNumber)
+        tagAfterMerge(dbModule,dbProdBranch,patchParameter,patchNumber)
+        commonPatchFunctions.log("DONE - module ${dbModule} tag ${dbPatchTag} merged to branch ${dbProdBranch}", "mergeDbObjectOnHead")
     }
     commonPatchFunctions.log("Patch ${patchNumber} merged to production branch", "mergeDbObjectOnHead")
 }
