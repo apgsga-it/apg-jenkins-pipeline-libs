@@ -22,3 +22,12 @@ def getResetRevisionGradleFile() {
     def renameCmdResult = sh(returnStdout: true, script: renameCmd).trim()
     println "result of ${renameCmd} : ${renameCmdResult}"
 }
+
+def logAssembleAndDeployPatchActivity(params,logText) {
+    def patchNumberList = params.patchNumbers
+    def target = params.target
+    commonPatchFunctions.log("Logging patch activity for ${patchNumberList}","onCloneFunctions.logAssembleAndDeployPatchActivity")
+    patchNumberList.each{patchNumber ->
+        commonPatchFunctions.logPatchActivity(patchNumber, target, "assembleAndDeploy", logText)
+    }
+}
