@@ -136,6 +136,11 @@ def logPatchActivity(patchNumberList,target,logText,buildUrl) {
     }
 }
 
+// JHE (22.06.2021) : Backward compatibility for onDemand Pipeline Jobs created for previous patches
+def logPatchActivity(patchNumberList,target,logText) {
+    logPatchActivity(patchNumberList,target,logText,"Not supported for old Patch")
+}
+
 def checkoutPackagerProjects(packagerProjectList) {
     commonPatchFunctions.log("Following packager will be checked-out from CVS : ${packagerProjectList}", "checkoutPackagerProjects")
     packagerProjectList.each{packager ->
