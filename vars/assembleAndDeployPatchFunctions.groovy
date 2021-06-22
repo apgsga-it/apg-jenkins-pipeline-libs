@@ -129,10 +129,10 @@ def doAssembleAndDeploy(parameter,revisionClonedPath) {
     }
 }
 
-def logPatchActivity(patchNumberList,target,logText) {
+def logPatchActivity(patchNumberList,target,logText,buildUrl) {
     commonPatchFunctions.log("Logging patch activity for ${patchNumberList}","logPatchActivity")
     patchNumberList.each{patchNumber ->
-        commonPatchFunctions.logPatchActivity(patchNumber, target, "assembleAndDeploy", logText)
+        commonPatchFunctions.logPatchActivity(patchNumber, target, "assembleAndDeploy", logText,buildUrl)
     }
 }
 

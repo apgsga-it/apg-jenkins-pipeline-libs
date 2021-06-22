@@ -64,10 +64,10 @@ def checkoutPackagerProjects(packagers) {
     }
 }
 
-def logPatchActivity(patchNumberList,target,logText) {
+def logPatchActivity(patchNumberList,target,logText,buildUrl) {
     commonPatchFunctions.log("Logging patch activity for ${patchNumberList}","logPatchActivity")
     patchNumberList.each{patchNumber ->
-        commonPatchFunctions.logPatchActivity(patchNumber, target, "install", logText)
+        commonPatchFunctions.logPatchActivity(patchNumber, target, "install", logText,buildUrl)
     }
 }
 
