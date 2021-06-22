@@ -71,6 +71,11 @@ def logPatchActivity(patchNumberList,target,logText,buildUrl) {
     }
 }
 
+// JHE (22.06.2021) : Backward compatibility for onDemand Pipeline Jobs created for previous patches
+def logPatchActivity(patchNumberList,target,logText) {
+    logPatchActivity(patchNumberList,target,logText,buildUrl,"Not supported for old Patch")
+}
+
 def cleanupIntermediateDbZips(patchNumber) {
      commonPatchFunctions.log("DB-ZIP installed in prod, removing ZIPs from ${env.DBZIPS_FILE_PATH} for following patche : ${patchNumber}","cleanupIntermediateDbZips")
      def rmCmd = "rm -f ${env.DBZIPS_FILE_PATH}/*${patchNumber}*.zip"
