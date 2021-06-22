@@ -73,7 +73,7 @@ def logPatchActivity(patchNumberList,target,logText,buildUrl) {
 
 // JHE (22.06.2021) : Backward compatibility for onDemand Pipeline Jobs created for previous patches
 def logPatchActivity(patchNumberList,target,logText) {
-    logPatchActivity(patchNumberList,target,logText,buildUrl,"Not supported for old Patch")
+    logPatchActivity(patchNumberList,target,logText,"Not supported for old Patch")
 }
 
 def cleanupIntermediateDbZips(patchNumber) {
