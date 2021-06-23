@@ -75,8 +75,8 @@ def notifyDb(patchNumbers, target, notification) {
 
 def logPatchActivity(def patchNumber, def target, def step, def logText, def buildUrl) {
     lock("logPatchActivity_${patchNumber}") {
-        println "patch activitey logged from follwing URL : ${buildUrl}"
-        def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -log ${patchNumber},${target},${step},${logText}"
+        log("Logging Patch activity for: patchNumber=${patchNumber}, target=${target}, step=${step}, logText=${logText}, buildUrl=${buildUrl}","logPatchActivity")
+        def cmd = "/opt/apg-patch-cli/bin/apscli.sh ${env.PIPER_URL_PARAMETER} -log ${patchNumber},${target},${step},${logText},${buildUrl}"
         println "Executeing ${cmd}"
         sh "${cmd}"
         println "Executeing ${cmd} done."
