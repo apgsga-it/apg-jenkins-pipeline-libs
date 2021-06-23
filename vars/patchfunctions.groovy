@@ -28,7 +28,7 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
 }
 
 def logMessageForOldPipelinePatch() {
-    return "Not supported for old Pipeline Patches"
+    return "Unsupported"
 }
 
 def updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath) {
