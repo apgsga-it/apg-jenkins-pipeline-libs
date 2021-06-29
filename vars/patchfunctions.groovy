@@ -5,7 +5,7 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
         // JHE (31.05.2021) : This lock will obviously slow down the build process. However, we want to be 100% sure that patches with mix of different services won't
         //                    take eachother over, and publish new revisions for services too early.
         lock("${jsonParam.target}-Build") {
-            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "started")
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "started",jsonParam.buildUrl == null ? logMessageForOldPipelinePatch() : jsonParam.buildUrl)
             // TODO JHE (05.10.2020): We could build service in parallel, but not a priority for the first release
             jsonParam.services.each { service ->
                 (
@@ -22,9 +22,13 @@ def patchBuildsConcurrent(jsonParam, revisionClonedPath) {
                         }
                 )
             }
-            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "done")
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "build", "done", jsonParam.buildUrl == null ? logMessageForOldPipelinePatch() : jsonParam.buildUrl)
         }
     }
+}
+
+def logMessageForOldPipelinePatch() {
+    return "Unsupported"
 }
 
 def updateBomForNonBuiltArtifacts(service, jsonParam, revisionClonedPath) {
@@ -65,10 +69,10 @@ def javaBuildRequired(jsonParam) {
 def patchBuildDbZip(jsonParam) {
     if (dbBuildRequired(jsonParam)) {
         lock("dbBuild-${jsonParam.target}-Build") {
-            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "db-build", "started")
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "db-build", "started", jsonParam.buildUrl == null ? logMessageForOldPipelinePatch() : jsonParam.buildUrl)
             coDbModules(jsonParam)
             buildDbZip(jsonParam)
-            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "db-build", "done")
+            commonPatchFunctions.logPatchActivity(jsonParam.patchNumber, jsonParam.target, "db-build", "done", jsonParam.buildUrl == null ? logMessageForOldPipelinePatch() : jsonParam.buildUrl)
         }
     }
 }

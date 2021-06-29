@@ -129,11 +129,16 @@ def doAssembleAndDeploy(parameter,revisionClonedPath) {
     }
 }
 
-def logPatchActivity(patchNumberList,target,logText) {
-    commonPatchFunctions.log("Logging patch activity for ${patchNumberList}","logPatchActivity")
+def logPatchActivity(patchNumberList,target,logText,buildUrl) {
+    commonPatchFunctions.log("Logging patch activity for ${patchNumberList} on target ${target} with logText '${logText}' and buildUrl = '${buildUrl}'" ,"logPatchActivity")
     patchNumberList.each{patchNumber ->
-        commonPatchFunctions.logPatchActivity(patchNumber, target, "assembleAndDeploy", logText)
+        commonPatchFunctions.logPatchActivity(patchNumber, target, "assembleAndDeploy", logText,buildUrl)
     }
+}
+
+// JHE (22.06.2021) : Backward compatibility for onDemand Pipeline Jobs created for previous patches
+def logPatchActivity(patchNumberList,target,logText) {
+    logPatchActivity(patchNumberList,target,logText,"Unsupported")
 }
 
 def checkoutPackagerProjects(packagerProjectList) {
