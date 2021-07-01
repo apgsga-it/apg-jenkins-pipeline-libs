@@ -108,7 +108,9 @@ def installationPostProcess(parameters) {
         }
 
         parameters.patchNumbers.each {patchNumber ->
-            cleanupIntermediateDbZips(patchNumber)
+            // JHE (01.07.2021) Temporary workaround for CM-418, to avoid problems during onClone
+            commonPatchFunctions.log("Workaround for CM-418, dbZip for Patch ${patchNumber} should have been deleted (if any) here!","installationPostProcess")
+            //cleanupIntermediateDbZips(patchNumber)
         }
    }
 }
